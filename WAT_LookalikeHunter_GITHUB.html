@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WAT Look-alike Hunter</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f7f7f5;color:#111;min-height:100vh}
+.app{background:#fff;min-height:100vh;display:flex;flex-direction:column;max-width:1100px;margin:0 auto;border-left:1px solid #e8e8e8;border-right:1px solid #e8e8e8}
+
+/* NAV */
+.nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;background:#fff;border-bottom:1px solid #ebebeb;flex-shrink:0;position:sticky;top:0;z-index:100}
+.nav-l{display:flex;align-items:center;gap:10px}
+.logo{width:30px;height:30px;background:#111;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo span{color:#fff;font-size:9px;font-weight:700;font-family:monospace;letter-spacing:-0.3px}
+.app-name{font-size:14px;font-weight:600;color:#111}
+.app-div{width:1px;height:14px;background:#ddd}
+.app-sub{font-size:12px;color:#aaa}
+.nav-steps{display:flex;align-items:center;gap:2px}
+.stp{display:flex;align-items:center;gap:7px;padding:5px 12px;border-radius:8px;cursor:pointer;transition:background 0.12s;user-select:none}
+.stp:hover{background:#f5f5f5}
+.stp.active{background:#f0f0f0}
+.stp-n{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-family:monospace;font-weight:700;border:1px solid #ddd;color:#bbb;background:#fff;flex-shrink:0;transition:all 0.2s}
+.stp.active .stp-n{background:#111;color:#fff;border-color:#111}
+.stp.done .stp-n{background:#16a34a;color:#fff;border-color:#16a34a;font-size:11px}
+.stp-l{font-size:12px;color:#888}
+.stp.active .stp-l{color:#111;font-weight:600}
+.stp.done .stp-l{color:#16a34a}
+.arr{font-size:13px;color:#ddd;padding:0 2px}
+.nav-r{display:flex;align-items:center;gap:8px}
+.api-pill{display:flex;align-items:center;gap:5px;padding:5px 11px;border:1px solid #e8e8e8;border-radius:20px;background:#fafafa;cursor:pointer;transition:all 0.12s}
+.api-pill:hover{border-color:#ddd;background:#f0f0f0}
+.dot{width:7px;height:7px;border-radius:50%;background:#f59e0b;flex-shrink:0}
+.dot.live{background:#16a34a}
+.api-txt{font-size:11px;font-family:monospace;color:#999}
+.btn{padding:7px 16px;border:1px solid #e0e0e0;border-radius:7px;background:#fff;font-size:12px;color:#555;cursor:pointer;font-family:inherit;transition:all 0.15s;white-space:nowrap}
+.btn:hover{background:#f5f5f5;border-color:#ccc}
+.btn.dark{background:#111;color:#fff;border-color:#111}
+.btn.dark:hover{background:#2a2a2a}
+.btn.sm{padding:5px 12px;font-size:11px}
+.btn.green{background:#16a34a;color:#fff;border-color:#16a34a}
+.btn.green:hover{background:#15803d}
+
+/* PANELS */
+.panel{display:none;padding:24px 28px;flex:1;animation:fadeIn 0.2s ease}
+.panel.on{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* PAGE HEADER */
+.ph{margin-bottom:24px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.ph-left{}
+.ph-eye{font-size:11px;font-family:monospace;color:#bbb;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px}
+.ph-title{font-size:22px;font-weight:700;color:#111;margin-bottom:5px}
+.ph-desc{font-size:13px;color:#777;line-height:1.55;max-width:500px}
+.ph-stat{background:#f7f7f5;border:1px solid #ebebeb;border-radius:10px;padding:12px 20px;text-align:center;flex-shrink:0}
+.ph-stat-v{font-size:26px;font-weight:700;color:#111;font-family:monospace}
+.ph-stat-l{font-size:11px;color:#aaa;margin-top:1px}
+
+/* CLIENT CARDS */
+.cc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;margin-bottom:16px}
+.cc{background:#fff;border:1px solid #ebebeb;border-radius:12px;padding:15px;cursor:pointer;position:relative;transition:all 0.15s}
+.cc:hover{border-color:#bbb;transform:translateY(-1px)}
+.cc.sel{border:2px solid #111;background:#fafafa}
+.cc-chk{position:absolute;top:11px;right:11px;width:19px;height:19px;border-radius:50%;background:#f0f0f0;border:1px solid #ddd;display:flex;align-items:center;justify-content:center;font-size:10px;color:#ccc;transition:all 0.15s}
+.cc.sel .cc-chk{background:#111;color:#fff;border:none}
+.cc-name{font-size:13px;font-weight:700;color:#111;padding-right:24px;margin-bottom:2px}
+.cc-sub{font-size:11px;color:#999;margin-bottom:10px;line-height:1.4}
+.cc-pills{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:10px}
+.pill{font-size:10px;padding:2px 7px;border-radius:20px;font-family:monospace;display:inline-block;font-weight:500}
+.pill-b{background:#dbeafe;color:#1e40af}
+.pill-g{background:#dcfce7;color:#15803d}
+.pill-a{background:#fef3c7;color:#92400e}
+.pill-r{background:#fee2e2;color:#b91c1c}
+.pill-n{background:#f3f4f6;color:#6b7280;border:1px solid #e5e7eb}
+.cc-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;border-top:1px solid #f0f0f0;padding-top:10px;margin-top:2px}
+.cc-sv{font-size:14px;font-weight:700;color:#111}
+.cc-sl{font-size:10px;color:#bbb;font-family:monospace;text-transform:uppercase;letter-spacing:0.05em}
+.cc-add{background:#fafafa;border:1.5px dashed #e0e0e0;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;min-height:172px;cursor:pointer;transition:all 0.15s}
+.cc-add:hover{border-color:#aaa;background:#f5f5f5}
+.cc-add-icon{width:36px;height:36px;border-radius:50%;background:#ebebeb;display:flex;align-items:center;justify-content:center;font-size:20px;color:#aaa;transition:all 0.15s}
+.cc-add:hover .cc-add-icon{background:#e0e0e0}
+.cc-add span{font-size:12px;color:#aaa;font-weight:500}
+
+/* INTAKE FORM */
+.intake{background:#f8f8f6;border-radius:12px;padding:22px;margin-bottom:16px;border:1px solid #e8e8e8;display:none}
+.intake.on{display:block;animation:fadeIn 0.2s ease}
+.intake-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.intake-title{font-size:14px;font-weight:700;color:#111}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+.field{display:flex;flex-direction:column;gap:4px}
+.fl{font-size:11px;font-weight:600;color:#777;text-transform:uppercase;letter-spacing:0.06em}
+.fhint{font-size:11px;color:#bbb}
+input[type=text],input[type=number],select,textarea{width:100%;padding:9px 12px;border:1px solid #e0e0e0;border-radius:7px;font-size:13px;color:#111;font-family:inherit;background:#fff;outline:none;transition:border-color 0.15s}
+input:focus,select:focus,textarea:focus{border-color:#888;box-shadow:0 0 0 3px rgba(0,0,0,0.04)}
+textarea{min-height:70px;resize:vertical;line-height:1.5}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23999' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;appearance:none;cursor:pointer}
+.tag-box{border:1px solid #e0e0e0;border-radius:7px;padding:6px 8px;background:#fff;display:flex;flex-wrap:wrap;gap:4px;cursor:text;min-height:40px;transition:all 0.15s;align-items:flex-start}
+.tag-box:focus-within{border-color:#888;box-shadow:0 0 0 3px rgba(0,0,0,0.04)}
+.itag{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;background:#111;color:#fff;border-radius:20px;font-size:11px;font-family:monospace;font-weight:500}
+.itag-x{cursor:pointer;opacity:0.5;font-size:14px;line-height:1;margin-left:1px;transition:opacity 0.1s}
+.itag-x:hover{opacity:1}
+.tag-inp{border:none;outline:none;font-size:12px;background:transparent;color:#111;flex:1;min-width:100px;padding:3px 2px;font-family:inherit}
+.tog-row{display:flex;flex-wrap:wrap;gap:6px}
+.tog{padding:6px 13px;border:1px solid #e0e0e0;border-radius:20px;font-size:12px;color:#777;cursor:pointer;background:#fff;font-family:inherit;transition:all 0.15s;user-select:none}
+.tog:hover{border-color:#bbb;background:#f8f8f8}
+.tog.on{background:#111;border-color:#111;color:#fff}
+.intake-acts{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:16px;border-top:1px solid #ebebeb}
+
+/* ACTION BAR */
+.abar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#fff;border:1px solid #ebebeb;border-radius:10px;margin-top:4px}
+.abar-l{font-size:13px;color:#888}
+.abar-l strong{color:#111;font-weight:700}
+
+/* ICP */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.card{background:#fff;border:1px solid #ebebeb;border-radius:12px;padding:16px 18px}
+.card-lbl{font-size:11px;font-family:monospace;color:#bbb;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.irow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid #f5f5f5}
+.irow:last-child{border-bottom:none}
+.ik{font-size:12px;color:#888}
+.iv{font-size:12px;font-weight:600;color:#111;text-align:right}
+.cbar-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #f5f5f5}
+.cbar-row:last-child{border-bottom:none}
+.cbar-lbl{font-size:12px;color:#888;min-width:145px}
+.cbar-track{flex:1;height:5px;background:#f0f0f0;border-radius:3px;overflow:hidden}
+.cbar-fill{height:100%;background:#111;border-radius:3px;transition:width 0.6s ease}
+.cbar-pct{font-size:11px;font-family:monospace;color:#bbb;min-width:32px;text-align:right}
+.tcard{background:#f8f8f6;border-radius:10px;padding:14px 16px;margin-bottom:10px;border:1px solid #ebebeb}
+.tcard-lbl{font-size:11px;font-family:monospace;color:#bbb;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:9px}
+.tags-wrap{display:flex;flex-wrap:wrap;gap:5px}
+.ftag{font-size:11px;padding:4px 10px;border-radius:20px;background:#fff;border:1px solid #ddd;color:#666;display:inline-block}
+.ftag-b{background:#dbeafe;color:#1e40af;padding:4px 10px;border-radius:20px;font-size:11px;display:inline-block;font-weight:500}
+.ftag-warn{font-size:10px;color:#d97706;margin-left:8px;font-weight:500}
+
+/* PROSPECTS */
+.pr-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.pr-meta{font-size:12px;color:#aaa}
+.pr-list{display:flex;flex-direction:column;gap:10px}
+.pr{background:#fff;border:1px solid #ebebeb;border-radius:12px;padding:16px 18px;display:grid;grid-template-columns:36px 1fr 56px;gap:12px;align-items:start;transition:all 0.15s}
+.pr:hover{border-color:#ccc;transform:translateY(-1px)}
+.pr-idx{font-size:12px;font-family:monospace;color:#ddd;padding-top:3px;font-weight:700}
+.pr-name{font-size:15px;font-weight:700;color:#111;margin-bottom:2px}
+.pr-sub{font-size:12px;color:#999;margin-bottom:8px;line-height:1.4}
+.pr-pills{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:9px}
+.pr-match{font-size:12px;color:#666;line-height:1.6;padding:9px 12px;background:#f8f8f6;border-radius:8px;border-left:3px solid #e0e0e0}
+.pr-pitch-wrap{margin-top:8px;display:none}
+.pr-pitch-wrap.on{display:block;animation:fadeIn 0.2s ease}
+.pr-pitch{font-size:12px;color:#111;line-height:1.7;padding:12px 14px;border:1px solid #e8e8e8;border-radius:8px;background:#fffef8;position:relative}
+.pr-pitch-copy{position:absolute;top:8px;right:8px;padding:4px 10px;font-size:11px;background:#fff;border:1px solid #e0e0e0;border-radius:5px;cursor:pointer;color:#666;font-family:inherit;transition:all 0.12s}
+.pr-pitch-copy:hover{background:#f5f5f5}
+.pr-pitch-copy.copied{background:#dcfce7;border-color:#86efac;color:#15803d}
+.pr-acts{display:flex;gap:10px;margin-top:9px;flex-wrap:wrap;align-items:center}
+.act-btn{font-size:12px;color:#2563eb;background:none;border:none;cursor:pointer;padding:0;font-family:inherit;display:flex;align-items:center;gap:4px;transition:opacity 0.12s}
+.act-btn:hover{opacity:0.7}
+.act-btn.muted{color:#aaa}
+.score{width:48px;height:48px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px solid #e8e8e8;flex-shrink:0;transition:border-color 0.2s}
+.score.hi{border-color:#16a34a}
+.score.mid{border-color:#f59e0b}
+.score-v{font-size:16px;font-weight:700;font-family:monospace;color:#111;line-height:1}
+.score.hi .score-v{color:#16a34a}
+.score.mid .score-v{color:#d97706}
+.score-u{font-size:9px;color:#bbb;font-family:monospace;text-transform:uppercase;letter-spacing:0.04em}
+
+/* LOADING */
+.loading{display:flex;align-items:center;gap:8px;font-size:12px;color:#aaa;padding:8px 0}
+.spinner{width:14px;height:14px;border:2px solid #e0e0e0;border-top-color:#111;border-radius:50%;animation:spin 0.7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.more-row{text-align:center;padding:14px 0 4px}
+
+/* STATUS BAR */
+.status-bar{display:flex;align-items:center;justify-content:space-between;padding:11px 28px;background:#fafafa;border-top:1px solid #ebebeb;flex-shrink:0}
+.sb-l{font-size:11px;color:#ccc;font-family:monospace}
+.sb-r{display:flex;align-items:center;gap:8px}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.on{display:flex;animation:fadeOverlay 0.15s ease}
+@keyframes fadeOverlay{from{opacity:0}to{opacity:1}}
+.modal{background:#fff;border-radius:16px;padding:28px;max-width:480px;width:90%;position:relative;animation:slideUp 0.2s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.modal-close{position:absolute;top:14px;right:14px;width:28px;height:28px;border-radius:50%;background:#f0f0f0;border:none;cursor:pointer;font-size:14px;color:#888;display:flex;align-items:center;justify-content:center;transition:all 0.12s}
+.modal-close:hover{background:#e0e0e0}
+.modal-title{font-size:18px;font-weight:700;color:#111;margin-bottom:6px}
+.modal-sub{font-size:13px;color:#888;margin-bottom:20px;line-height:1.5}
+.modal-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid #f5f5f5}
+.modal-item:last-of-type{border-bottom:none}
+.modal-icon{width:32px;height:32px;border-radius:8px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;margin-top:1px}
+.modal-item-title{font-size:13px;font-weight:600;color:#111;margin-bottom:2px}
+.modal-item-desc{font-size:12px;color:#888;line-height:1.5}
+.modal-item-badge{display:inline-block;font-size:10px;font-family:monospace;padding:2px 8px;border-radius:20px;margin-top:4px;font-weight:500}
+.badge-done{background:#dcfce7;color:#15803d}
+.badge-pending{background:#fef3c7;color:#92400e}
+.badge-future{background:#f3f4f6;color:#6b7280}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);background:#111;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:500;opacity:0;transition:all 0.3s;z-index:300;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.ctx-tag{display:inline-block;padding:5px 11px;border:1px solid #e0e0e0;border-radius:20px;font-size:12px;color:#777;cursor:pointer;background:#fff;transition:all 0.15s;user-select:none}
+.ctx-tag:hover{border-color:#bbb;background:#f5f5f5}
+.ctx-tag.on{background:#111;border-color:#111;color:#fff}
+.ai-insight{background:#fffef0;border:1px solid #fde68a;border-radius:10px;padding:14px 16px;margin-bottom:8px}
+.ai-insight-name{font-size:14px;font-weight:700;color:#111;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.ai-insight-score{font-size:11px;font-family:monospace;padding:2px 8px;border-radius:20px;background:#fef3c7;color:#92400e;font-weight:600}
+.ai-insight-body{font-size:13px;color:#555;line-height:1.65}
+.ai-insight-why{margin-top:8px;padding:8px 12px;background:#fff;border-radius:7px;border-left:3px solid #fbbf24;font-size:12px;color:#666;line-height:1.6}
+.ctx-filter-result{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;font-size:12px;color:#15803d;line-height:1.6}
+
+/* PROSPECTS EXTRA (hidden initially) */
+.pr-extra{display:none}
+.pr-extra.on{display:block}
+
+/* CLIENT DETAIL DRAWER */
+.drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:150;align-items:flex-start;justify-content:flex-end}
+.drawer-overlay.on{display:flex;animation:fadeOverlay 0.18s ease}
+.drawer{width:420px;max-width:95vw;height:100vh;background:#fff;box-shadow:-4px 0 24px rgba(0,0,0,0.1);overflow-y:auto;animation:slideInRight 0.22s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column}
+@keyframes slideInRight{from{transform:translateX(40px);opacity:0}to{transform:translateX(0);opacity:1}}
+.drawer-header{padding:20px 20px 16px;border-bottom:1px solid #ebebeb;display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0;position:sticky;top:0;background:#fff;z-index:2}
+.drawer-name{font-size:18px;font-weight:700;color:#111;margin-bottom:2px}
+.drawer-sub{font-size:12px;color:#999}
+.drawer-close{width:30px;height:30px;border-radius:50%;background:#f0f0f0;border:none;cursor:pointer;font-size:14px;color:#888;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.12s}
+.drawer-close:hover{background:#e0e0e0}
+.drawer-body{padding:20px;flex:1}
+.drawer-section{margin-bottom:20px}
+.drawer-section-title{font-size:11px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px}
+.drawer-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f5f5f5;font-size:13px}
+.drawer-row:last-child{border-bottom:none}
+.drawer-row .dk{color:#777}
+.drawer-row .dv{font-weight:600;color:#111;text-align:right}
+.emph-title{font-size:11px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px}
+.emph-desc{font-size:12px;color:#bbb;margin-bottom:12px;line-height:1.5}
+.emph-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.emph-btn{padding:8px 10px;border:1.5px solid #ebebeb;border-radius:8px;font-size:12px;color:#666;cursor:pointer;background:#fff;font-family:inherit;transition:all 0.15s;text-align:left;line-height:1.4;position:relative}
+.emph-btn:hover{border-color:#bbb;background:#fafafa}
+.emph-btn.on{border-color:#111;background:#111;color:#fff}
+.emph-icon{font-size:14px;display:block;margin-bottom:3px}
+.emph-label{font-weight:600;font-size:12px;display:block}
+.emph-sublabel{font-size:10px;opacity:0.65;display:block;margin-top:1px}
+.emph-boost{position:absolute;top:6px;right:6px;background:#16a34a;color:#fff;font-size:9px;font-family:monospace;padding:2px 5px;border-radius:3px;font-weight:600}
+.drawer-footer{padding:16px 20px;border-top:1px solid #ebebeb;flex-shrink:0;background:#fff;position:sticky;bottom:0}
+.drawer-footer-note{font-size:11px;color:#bbb;margin-top:8px;text-align:center}
+.cc-edit{position:absolute;bottom:10px;right:10px;padding:3px 9px;font-size:10px;border:1px solid #e0e0e0;border-radius:4px;background:#fff;color:#888;cursor:pointer;font-family:inherit;transition:all 0.12s;z-index:2}
+.cc-edit:hover{border-color:#aaa;background:#f5f5f5;color:#111}
+.cc.sel .cc-edit{border-color:#ccc}
+.emph-indicator{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px;min-height:0}
+
+/* PROSPECT DETAIL DRAWER */
+.pd-section{margin-bottom:20px}
+.pd-section-title{font-size:11px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px}
+.pd-row{display:flex;justify-content:space-between;align-items:flex-start;padding:7px 0;border-bottom:1px solid #f5f5f5;font-size:13px;gap:12px}
+.pd-row:last-child{border-bottom:none}
+.pd-k{color:#777;flex-shrink:0;min-width:110px}
+.pd-v{font-weight:600;color:#111;text-align:right}
+.pd-signal{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:#f8f8f6;border-radius:7px;margin-bottom:6px;font-size:12px;color:#444;line-height:1.5}
+.pd-signal-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+.pd-signal.hot{background:#fef3c7;border-left:3px solid #f59e0b}
+.pd-signal.hot .pd-signal-icon::after{content:''}
+.pd-score-bar{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid #f5f5f5}
+.pd-score-bar:last-child{border-bottom:none}
+.pd-score-lbl{font-size:12px;color:#777;min-width:120px}
+.pd-score-track{flex:1;height:5px;background:#f0f0f0;border-radius:3px;overflow:hidden}
+.pd-score-fill{height:100%;border-radius:3px;background:#111}
+.pd-score-val{font-size:11px;font-family:monospace;color:#bbb;min-width:30px;text-align:right}
+.pr-view-btn{font-size:11px;color:#555;background:#f5f5f5;border:1px solid #e0e0e0;border-radius:5px;padding:3px 10px;cursor:pointer;font-family:inherit;transition:all 0.12s;white-space:nowrap}
+.pr-view-btn:hover{background:#ebebeb;border-color:#ccc}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- NAV -->
+<div class="nav">
+  <div class="nav-l">
+    <div class="logo"><span>WAT</span></div>
+    <div class="app-name">Look-alike Hunter</div>
+    <div class="app-div"></div>
+    <div class="app-sub">Misión 3B</div>
+  </div>
+  <div class="nav-steps">
+    <div class="stp done" onclick="go(0)">
+      <div class="stp-n">✓</div>
+      <span class="stp-l">Clientes</span>
+    </div>
+    <span class="arr">›</span>
+    <div class="stp active" onclick="go(1)">
+      <div class="stp-n">2</div>
+      <span class="stp-l">Perfil ideal</span>
+    </div>
+    <span class="arr">›</span>
+    <div class="stp" onclick="go(2)">
+      <div class="stp-n">3</div>
+      <span class="stp-l">Look-alikes</span>
+    </div>
+  </div>
+  <div class="nav-r">
+    <div class="api-pill" onclick="openModal('modalRoadmap')">
+      <div class="dot"></div>
+      <span class="api-txt">Apollo · pendiente</span>
+    </div>
+    <button class="btn dark sm" onclick="openModal('modalRoadmap')">¿Qué falta? →</button>
+    <button class="btn sm" onclick="setupKey()" style="font-size:11px;padding:5px 10px" title="Configurar API key">🔑 Key</button>
+  </div>
+</div>
+
+<!-- PANEL 1: CLIENTES -->
+<div class="panel on" id="p0">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-eye">Paso 1 de 3</div>
+      <div class="ph-title">Clientes de referencia</div>
+      <div class="ph-desc">Selecciona los clientes TOP de WAT. El agente detectará los patrones comunes y generará el perfil ideal para buscar empresas similares.</div>
+    </div>
+    <div class="ph-stat">
+      <div class="ph-stat-v" id="selCnt">3</div>
+      <div class="ph-stat-l">Seleccionados</div>
+    </div>
+  </div>
+
+  <div class="cc-grid" id="ccgrid">
+    <div class="cc sel" onclick="handleCCClick(event,this)">
+      <div class="cc-chk">✓</div>
+      <div class="cc-name">TradeInn</div>
+      <div class="cc-sub">E-commerce · Deportes outdoor · España</div>
+      <div class="cc-pills"><span class="pill pill-b">Customer service</span><span class="pill pill-b">Data ops</span><span class="pill pill-g">Margen alto</span></div>
+      <div class="cc-stats"><div><div class="cc-sv">40+</div><div class="cc-sl">Profesionales</div></div><div><div class="cc-sv">3 años</div><div class="cc-sl">Relación</div></div></div>
+      <div class="emph-indicator" id="emph-ind-TradeInn"></div>
+      <button class="cc-edit" onclick="openDrawer(event,'TradeInn')">Destacar →</button>
+    </div>
+    <div class="cc sel" onclick="handleCCClick(event,this)">
+      <div class="cc-chk">✓</div>
+      <div class="cc-name">Netrival</div>
+      <div class="cc-sub">SaaS · Pricing intelligence · España</div>
+      <div class="cc-pills"><span class="pill pill-b">Analysts</span><span class="pill pill-b">Dev support</span><span class="pill pill-a">Margen medio-alto</span></div>
+      <div class="cc-stats"><div><div class="cc-sv">15</div><div class="cc-sl">Profesionales</div></div><div><div class="cc-sv">2 años</div><div class="cc-sl">Relación</div></div></div>
+      <div class="emph-indicator" id="emph-ind-Netrival"></div>
+      <button class="cc-edit" onclick="openDrawer(event,'Netrival')">Destacar →</button>
+    </div>
+    <div class="cc sel" onclick="handleCCClick(event,this)">
+      <div class="cc-chk">✓</div>
+      <div class="cc-name">Holaluz</div>
+      <div class="cc-sub">Energía · B2C digital · España</div>
+      <div class="cc-pills"><span class="pill pill-b">Atención cliente</span><span class="pill pill-b">Back office</span><span class="pill pill-g">Margen alto</span></div>
+      <div class="cc-stats"><div><div class="cc-sv">25</div><div class="cc-sl">Profesionales</div></div><div><div class="cc-sv">4 años</div><div class="cc-sl">Relación</div></div></div>
+      <div class="emph-indicator" id="emph-ind-Holaluz"></div>
+      <button class="cc-edit" onclick="openDrawer(event,'Holaluz')">Destacar →</button>
+    </div>
+    <div class="cc-add" id="addBtn" onclick="showIntake()">
+      <div class="cc-add-icon">+</div>
+      <span>Añadir cliente</span>
+    </div>
+  </div>
+
+  <div class="intake" id="intakeForm">
+    <div class="intake-hdr">
+      <div class="intake-title">Nuevo cliente</div>
+      <button class="btn sm" onclick="hideIntake()">Cancelar</button>
+    </div>
+    <div class="fg2">
+      <div class="field"><div class="fl">Nombre *</div><input type="text" id="fn" placeholder="ej. Factorial HR"></div>
+      <div class="field"><div class="fl">Sector *</div>
+        <select id="fs"><option value="">Seleccionar...</option><option>E-commerce</option><option>SaaS / Software</option><option>Logística</option><option>Fintech</option><option>Salud</option><option>Retail</option><option>Energía</option><option>Media / Adtech</option><option>Manufactura</option><option>Otro</option></select>
+      </div>
+    </div>
+    <div class="fg3">
+      <div class="field"><div class="fl">País</div><input type="text" id="fc" placeholder="España"></div>
+      <div class="field"><div class="fl">Empleados</div><select id="fz"><option value="">...</option><option>11–50</option><option>51–200</option><option>201–500</option><option>501–1000</option><option>+1000</option></select></div>
+      <div class="field"><div class="fl">Margen WAT</div><select id="fm"><option value="">...</option><option>Muy alto</option><option>Alto</option><option>Medio</option><option>Bajo</option></select></div>
+    </div>
+    <div class="fg2">
+      <div class="field">
+        <div class="fl">Perfiles que contratan</div>
+        <div class="fhint">Escribe y pulsa Enter</div>
+        <div class="tag-box" id="tagBox" onclick="document.getElementById('ti').focus()">
+          <input class="tag-inp" id="ti" placeholder="Customer service, Analyst..." onkeydown="addItag(event)">
+        </div>
+      </div>
+      <div class="field"><div class="fl">Fase de empresa</div>
+        <select id="ff"><option value="">...</option><option>Startup / Seed</option><option>Scale-up</option><option>Consolidada</option><option>Enterprise</option></select>
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:12px">
+      <div class="fl">¿Por qué WAT y no la competencia?</div>
+      <textarea id="fw" placeholder="Velocidad de placement, especialización, precio, flexibilidad..."></textarea>
+    </div>
+    <div class="field" style="margin-bottom:12px">
+      <div class="fl">Pain points antes de trabajar con WAT</div>
+      <textarea id="fp" placeholder="Alta rotación, dificultad para escalar, falta de perfiles multiidioma..."></textarea>
+    </div>
+    <div class="field">
+      <div class="fl">¿Por qué es un cliente TOP?</div>
+      <div class="tog-row" id="topToggle">
+        <div class="tog" onclick="this.classList.toggle('on')">Alta rentabilidad</div>
+        <div class="tog" onclick="this.classList.toggle('on')">Relación larga</div>
+        <div class="tog" onclick="this.classList.toggle('on')">Mucho volumen</div>
+        <div class="tog" onclick="this.classList.toggle('on')">Paga rápido</div>
+        <div class="tog" onclick="this.classList.toggle('on')">Nos recomienda</div>
+        <div class="tog" onclick="this.classList.toggle('on')">Gestión fácil</div>
+        <div class="tog" onclick="this.classList.toggle('on')">Crecimiento constante</div>
+      </div>
+    </div>
+    <div class="intake-acts">
+      <button class="btn dark" onclick="saveClient()">Guardar cliente →</button>
+    </div>
+  </div>
+
+  <div class="abar">
+    <div class="abar-l"><strong id="selCnt2">3</strong> clientes seleccionados · <span style="color:#bbb">Añade al menos 2 para generar el ICP</span></div>
+    <button class="btn dark" onclick="go(1)">Generar perfil ideal →</button>
+  </div>
+</div>
+
+<!-- PANEL 2: ICP (dynamic) -->
+<div class="panel" id="p1">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-eye">Paso 2 de 3 · Análisis automático</div>
+      <div class="ph-title">Perfil de cliente ideal (ICP)</div>
+      <div class="ph-desc" id="icpDesc">Patrones detectados en los clientes seleccionados. Estos datos se usarán para generar los filtros de búsqueda en Apollo.</div>
+    </div>
+    <div class="ph-stat">
+      <div class="ph-stat-v" id="icpConfianza" style="font-size:20px;color:#16a34a">Alta</div>
+      <div class="ph-stat-l">Confianza ICP</div>
+    </div>
+  </div>
+
+  <!-- empty state -->
+  <div id="icpEmpty" style="display:none;text-align:center;padding:48px 24px;background:#fafafa;border-radius:12px;border:1px dashed #ddd;margin-bottom:16px">
+    <div style="font-size:32px;margin-bottom:10px">👈</div>
+    <div style="font-size:14px;font-weight:600;color:#888;margin-bottom:4px">Selecciona al menos un cliente</div>
+    <div style="font-size:12px;color:#bbb">Vuelve al paso 1 y activa los clientes que quieres usar como referencia</div>
+    <button class="btn" style="margin-top:14px" onclick="go(0)">← Volver a clientes</button>
+  </div>
+
+  <div id="icpContent">
+    <div class="two-col">
+      <div class="card">
+        <div class="card-lbl">🏢 Empresa ideal</div>
+        <div class="irow"><span class="ik">Sector</span><span class="iv" id="icp-sector">—</span></div>
+        <div class="irow"><span class="ik">Tamaño</span><span class="iv" id="icp-size">—</span></div>
+        <div class="irow"><span class="ik">Revenue</span><span class="iv" id="icp-revenue">—</span></div>
+        <div class="irow"><span class="ik">Geografía</span><span class="iv" id="icp-geo">—</span></div>
+        <div class="irow"><span class="ik">Modelo</span><span class="iv" id="icp-model">—</span></div>
+        <div class="irow"><span class="ik">Fase</span><span class="iv" id="icp-fase">—</span></div>
+      </div>
+      <div class="card">
+        <div class="card-lbl">📊 Necesidades recurrentes</div>
+        <div id="icpBars"></div>
+      </div>
+    </div>
+
+    <div class="tcard">
+      <div class="tcard-lbl">⚡ Señales de trigger — cuándo prospectar</div>
+      <div class="tags-wrap" id="icpTriggers"></div>
+    </div>
+
+    <div class="tcard">
+      <div class="tcard-lbl">🔍 Filtros Apollo generados <span class="ftag-warn">· Pendiente conexión API</span></div>
+      <div class="tags-wrap" id="icpApollo"></div>
+    </div>
+  </div>
+
+  <div class="abar">
+    <div class="abar-l">ICP basado en <strong id="icpCount">0</strong> cliente(s) seleccionado(s)</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn" onclick="go(0)">← Editar clientes</button>
+      <button class="btn dark" onclick="go(2)">Ver look-alikes →</button>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL 3: LOOK-ALIKES -->
+<div class="panel" id="p2">
+  <div class="ph">
+    <div class="ph-left">
+      <div class="ph-eye">Paso 3 de 3 · Resultados</div>
+      <div class="ph-title">Look-alikes encontrados</div>
+      <div class="ph-desc">12 empresas ordenadas por score de fit. Despliega el pitch de cada una — listo para que Aleix lo use directamente.</div>
+    </div>
+    <div class="ph-stat">
+      <div class="ph-stat-v">12</div>
+      <div class="ph-stat-l">Prospectos</div>
+    </div>
+  </div>
+
+  <!-- AI CONTEXT FILTERS -->
+  <div id="aiFiltersBox" style="background:#f8f8f6;border:1px solid #ebebeb;border-radius:12px;padding:16px 18px;margin-bottom:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div>
+        <div style="font-size:12px;font-weight:600;color:#111;margin-bottom:2px">🤖 Filtros de contexto — Claude</div>
+        <div style="font-size:11px;color:#aaa">Dile a Claude qué contexto extra importa ahora mismo. Añadirá criterios cualitativos al scoring.</div>
+      </div>
+      <button class="btn dark sm" id="runContextBtn" onclick="runContextFilters()">Analizar con IA →</button>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px" id="contextTagsWrap">
+      <span class="ctx-tag on" onclick="toggleCtxTag(this)">🚀 En fase de expansión</span>
+      <span class="ctx-tag" onclick="toggleCtxTag(this)">💰 Han levantado ronda reciente</span>
+      <span class="ctx-tag" onclick="toggleCtxTag(this)">📋 Tienen job posts de CS abiertos</span>
+      <span class="ctx-tag" onclick="toggleCtxTag(this)">🌍 Operan en varios países</span>
+      <span class="ctx-tag" onclick="toggleCtxTag(this)">⚡ Alta estacionalidad</span>
+      <span class="ctx-tag" onclick="toggleCtxTag(this)">🏗️ Están digitalizándose ahora</span>
+      <span class="ctx-tag" onclick="toggleCtxTag(this)">🔄 Han cambiado de CEO/liderazgo</span>
+      <span class="ctx-tag" onclick="toggleCtxTag(this)">📈 Crecimiento de headcount &gt;20%</span>
+    </div>
+    <div style="margin-bottom:6px">
+      <input type="text" id="customContext" placeholder="Añade tu propio contexto... ej: 'empresas que venden a millennials'" style="font-size:12px;padding:7px 12px">
+    </div>
+    <div id="aiFiltersResult" style="display:none"></div>
+  </div>
+
+  <div class="pr-hdr">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="pr-meta">Datos de demo · Apollo pendiente</div>
+      <button class="btn sm" id="analyzeTop5Btn" onclick="analyzeTop5()">✨ Analizar top 5 con IA</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:12px;color:#aaa">Ordenar</span>
+      <select style="font-size:12px;width:auto;padding:5px 10px">
+        <option>Score de fit</option><option>Tamaño</option><option>Sector</option><option>País</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- TOP 5 AI ANALYSIS RESULT -->
+  <div id="top5Analysis" style="display:none;margin-bottom:14px"></div>
+
+  <div class="pr-list">
+
+    <div class="pr">
+      <div class="pr-idx">01</div>
+      <div>
+        <div class="pr-name">Deporvillage</div>
+        <div class="pr-sub">E-commerce · Deportes · 80–120 emp. · España · ~30M€ revenue</div>
+        <div class="pr-pills"><span class="pill pill-b">E-commerce</span><span class="pill pill-b">Multiidioma</span><span class="pill pill-g">Expansión activa</span><span class="pill pill-n">3 job posts CS</span></div>
+        <div class="pr-match">Match con TradeInn — venta directa de equipamiento deportivo con logística propia. 3 posiciones CS abiertas en LinkedIn ahora mismo. Alta probabilidad de necesitar refuerzo de equipo en picos de demanda.</div>
+        <div class="pr-pitch-wrap" id="pw0">
+          <div class="pr-pitch" id="pt0">Hola [nombre], veo que Deporvillage está en plena expansión y tenéis varias posiciones de customer service abiertas. En WAT llevamos 3 años ayudando a TradeInn a escalar su equipo de operaciones con perfiles multiidioma en menos de 2 semanas. ¿Tiene sentido hablar 20 minutos esta semana?<button class="pr-pitch-copy" onclick="copyPitch('pt0',this)">Copiar</button></div>
+        </div>
+        <div class="pr-acts">
+          <button class="act-btn" onclick="togglePitch('pw0',this)">✉ Ver pitch</button>
+          <button class="act-btn" onclick="generateVariants('Deporvillage','pt0','pv0')">↻ Generar variante con IA</button>
+          <div id="pv0" style="width:100%;margin-top:6px;display:none"></div>
+          <button class="pr-view-btn" onclick="openProspectDrawer('Deporvillage')">📋 Ver perfil completo</button>
+        </div>
+      </div>
+      <div class="score hi"><span class="score-v">92</span><span class="score-u">fit</span></div>
+    </div>
+
+    <div class="pr">
+      <div class="pr-idx">02</div>
+      <div>
+        <div class="pr-name">Factorial HR</div>
+        <div class="pr-sub">SaaS · HR Tech · 300–500 emp. · España · ~50M€ revenue</div>
+        <div class="pr-pills"><span class="pill pill-b">B2B SaaS</span><span class="pill pill-b">Tech-enabled</span><span class="pill pill-g">Serie C</span><span class="pill pill-n">Support ops</span></div>
+        <div class="pr-match">Match con Netrival — SaaS de alto crecimiento con necesidad de soporte técnico escalable. Facturación y fase de empresa perfectamente alineadas con el ICP.</div>
+        <div class="pr-pitch-wrap" id="pw1">
+          <div class="pr-pitch" id="pt1">Hola [nombre], trabajamos con varios SaaS españoles en fase de escala — entre ellos Netrival — ayudándoles a montar equipos de soporte técnico sin los tiempos de un proceso de selección tradicional. Con el crecimiento que lleváis en Factorial puede ser muy relevante. ¿Hablamos 20 min?<button class="pr-pitch-copy" onclick="copyPitch('pt1',this)">Copiar</button></div>
+        </div>
+        <div class="pr-acts">
+          <button class="act-btn" onclick="togglePitch('pw1',this)">✉ Ver pitch</button>
+          <button class="act-btn" onclick="generateVariants('Factorial HR','pt1','pv1')">↻ Generar variante con IA</button>
+          <div id="pv1" style="width:100%;margin-top:6px;display:none"></div>
+          <button class="pr-view-btn" onclick="openProspectDrawer('Factorial HR')">📋 Ver perfil completo</button>
+        </div>
+      </div>
+      <div class="score hi"><span class="score-v">87</span><span class="score-u">fit</span></div>
+    </div>
+
+    <div class="pr">
+      <div class="pr-idx">03</div>
+      <div>
+        <div class="pr-name">Glovo</div>
+        <div class="pr-sub">Marketplace · Delivery · 2000+ emp. · España · +500M€ revenue</div>
+        <div class="pr-pills"><span class="pill pill-b">Ops</span><span class="pill pill-b">Customer support</span><span class="pill pill-g">Scale-up maduro</span><span class="pill pill-n">Expansión LATAM</span></div>
+        <div class="pr-match">Match alto con TradeInn + Holaluz — operaciones 24/7, altísimo volumen de atención al cliente, perfiles multiidioma y alta estacionalidad. Expansión activa en nuevos mercados.</div>
+        <div class="pr-pitch-wrap" id="pw2">
+          <div class="pr-pitch" id="pt2">Hola [nombre], en WAT gestionamos equipos de operaciones para empresas con alta demanda de atención y picos de volumen — desde TradeInn hasta Holaluz. Con la expansión que está llevando Glovo en nuevos mercados, escalar rápido con perfiles locales puede ser crítico. ¿15 minutos esta semana?<button class="pr-pitch-copy" onclick="copyPitch('pt2',this)">Copiar</button></div>
+        </div>
+        <div class="pr-acts">
+          <button class="act-btn" onclick="togglePitch('pw2',this)">✉ Ver pitch</button>
+          <button class="act-btn" onclick="generateVariants('Glovo','pt2','pv2')">↻ Generar variante con IA</button>
+          <div id="pv2" style="width:100%;margin-top:6px;display:none"></div>
+          <button class="pr-view-btn" onclick="openProspectDrawer('Glovo')">📋 Ver perfil completo</button>
+        </div>
+      </div>
+      <div class="score hi"><span class="score-v">85</span><span class="score-u">fit</span></div>
+    </div>
+
+    <div class="pr">
+      <div class="pr-idx">04</div>
+      <div>
+        <div class="pr-name">Wallapop</div>
+        <div class="pr-sub">Marketplace · C2C · 300–500 emp. · España · ~80M€ revenue</div>
+        <div class="pr-pills"><span class="pill pill-b">Product ops</span><span class="pill pill-b">Trust & safety</span><span class="pill pill-g">Serie D</span><span class="pill pill-n">Expansión Italia</span></div>
+        <div class="pr-match">Match con TradeInn — marketplace digital con alto volumen de usuarios, necesidad de perfiles de moderación y customer ops multiidioma.</div>
+        <div class="pr-pitch-wrap" id="pw3">
+          <div class="pr-pitch" id="pt3">Hola [nombre], trabajamos con varios marketplaces españoles para escalar sus equipos de operaciones y customer ops con perfiles que se incorporan en 1–2 semanas. Con la expansión de Wallapop a Italia, el encaje puede ser inmediato. ¿Hablamos?<button class="pr-pitch-copy" onclick="copyPitch('pt3',this)">Copiar</button></div>
+        </div>
+        <div class="pr-acts">
+          <button class="act-btn" onclick="togglePitch('pw3',this)">✉ Ver pitch</button>
+          <button class="act-btn" onclick="generateVariants('Wallapop','pt3','pv3')">↻ Generar variante con IA</button>
+          <div id="pv3" style="width:100%;margin-top:6px;display:none"></div>
+          <button class="pr-view-btn" onclick="openProspectDrawer('Wallapop')">📋 Ver perfil completo</button>
+        </div>
+      </div>
+      <div class="score hi"><span class="score-v">82</span><span class="score-u">fit</span></div>
+    </div>
+
+    <div class="pr">
+      <div class="pr-idx">05</div>
+      <div>
+        <div class="pr-name">Paack</div>
+        <div class="pr-sub">Logística · Last-mile delivery · 200–400 emp. · España · ~40M€ revenue</div>
+        <div class="pr-pills"><span class="pill pill-b">Ops logística</span><span class="pill pill-b">Customer ops</span><span class="pill pill-g">Serie C</span></div>
+        <div class="pr-match">Match con TradeInn y Holaluz — operaciones de alta intensidad con picos de demanda, perfiles operativos multiidioma y necesidad de escalabilidad rápida.</div>
+        <div class="pr-pitch-wrap" id="pw4">
+          <div class="pr-pitch" id="pt4">Hola [nombre], en WAT ayudamos a empresas de operaciones y logística a escalar sus equipos en tiempo récord — sin los tiempos de procesos de selección tradicionales. Con el ritmo de crecimiento de Paack, puede tener mucho sentido. ¿Una llamada rápida?<button class="pr-pitch-copy" onclick="copyPitch('pt4',this)">Copiar</button></div>
+        </div>
+        <div class="pr-acts">
+          <button class="act-btn" onclick="togglePitch('pw4',this)">✉ Ver pitch</button>
+          <button class="act-btn" onclick="generateVariants('Paack','pt4','pv4')">↻ Generar variante con IA</button>
+          <div id="pv4" style="width:100%;margin-top:6px;display:none"></div>
+          <button class="pr-view-btn" onclick="openProspectDrawer('Paack')">📋 Ver perfil completo</button>
+        </div>
+      </div>
+      <div class="score mid"><span class="score-v">78</span><span class="score-u">fit</span></div>
+    </div>
+
+    <div class="pr">
+      <div class="pr-idx">06</div>
+      <div>
+        <div class="pr-name">Kantox</div>
+        <div class="pr-sub">Fintech · FX automation · 150–300 emp. · España · ~25M€ revenue</div>
+        <div class="pr-pills"><span class="pill pill-b">Fintech</span><span class="pill pill-b">Ops financieras</span><span class="pill pill-a">Nicho técnico</span></div>
+        <div class="pr-match">Match parcial con Netrival — SaaS B2B de nicho con necesidad de perfiles técnicos y de soporte. Ciclo de venta más largo por el sector financiero.</div>
+        <div class="pr-pitch-wrap" id="pw5">
+          <div class="pr-pitch" id="pt5">Hola [nombre], trabajamos con SaaS B2B españoles ayudándoles a incorporar perfiles técnicos y de operaciones sin los tiempos habituales de selección. Para una empresa como Kantox, donde cada perfil necesita contexto financiero específico, podemos ser un partner muy útil. ¿Hablamos?<button class="pr-pitch-copy" onclick="copyPitch('pt5',this)">Copiar</button></div>
+        </div>
+        <div class="pr-acts">
+          <button class="act-btn" onclick="togglePitch('pw5',this)">✉ Ver pitch</button>
+          <button class="act-btn" onclick="generateVariants('Kantox','pt5','pv5')">↻ Generar variante con IA</button>
+          <div id="pv5" style="width:100%;margin-top:6px;display:none"></div>
+          <button class="pr-view-btn" onclick="openProspectDrawer('Kantox')">📋 Ver perfil completo</button>
+        </div>
+      </div>
+      <div class="score mid"><span class="score-v">75</span><span class="score-u">fit</span></div>
+    </div>
+
+    <!-- PROSPECTOS EXTRA (se muestran al hacer click en "ver más") -->
+    <div class="pr-extra" id="prExtra">
+
+      <div class="pr" style="margin-top:0">
+        <div class="pr-idx">07</div>
+        <div>
+          <div class="pr-name">Ocaso Seguros</div>
+          <div class="pr-sub">Insurance · B2C · 200–400 emp. · España</div>
+          <div class="pr-pills"><span class="pill pill-b">B2C</span><span class="pill pill-b">Atención cliente</span><span class="pill pill-a">Ciclo largo</span></div>
+          <div class="pr-match">Match parcial con Holaluz — B2C de servicios con alto volumen de atención al cliente. Sector conservador puede ralentizar el ciclo de venta. Prioridad media.</div>
+          <div class="pr-pitch-wrap" id="pw6">
+            <div class="pr-pitch" id="pt6">Hola [nombre], en WAT trabajamos con empresas de servicios B2C que necesitan escalar equipos de atención sin perder calidad. Ayudamos a Holaluz a mantener su NPS durante picos de demanda con perfiles incorporados en menos de 10 días. ¿Os puede ser útil?<button class="pr-pitch-copy" onclick="copyPitch('pt6',this)">Copiar</button></div>
+          </div>
+          <div class="pr-acts">
+            <button class="act-btn" onclick="togglePitch('pw6',this)">✉ Ver pitch</button>
+            <button class="act-btn" onclick="generateVariants('Ocaso Seguros','pt6','pv6')">↻ Generar variante con IA</button>
+            <div id="pv6" style="width:100%;margin-top:6px;display:none"></div>
+            <button class="pr-view-btn" onclick="openProspectDrawer('Ocaso Seguros')">📋 Ver perfil completo</button>
+          </div>
+        </div>
+        <div class="score mid"><span class="score-v">72</span><span class="score-u">fit</span></div>
+      </div>
+
+      <div class="pr">
+        <div class="pr-idx">08</div>
+        <div>
+          <div class="pr-name">Flywire</div>
+          <div class="pr-sub">Fintech · Pagos internacionales · 500–800 emp. · España/USA</div>
+          <div class="pr-pills"><span class="pill pill-b">Fintech</span><span class="pill pill-b">Multiidioma</span><span class="pill pill-g">Nasdaq</span></div>
+          <div class="pr-match">Match con Netrival — empresa de tecnología financiera con operaciones internacionales y necesidad constante de perfiles técnicos y de soporte multiidioma.</div>
+          <div class="pr-pitch-wrap" id="pw7">
+            <div class="pr-pitch" id="pt7">Hola [nombre], colaboramos con empresas de pagos y fintech internacionales para cubrir posiciones técnicas y de operaciones con perfiles que hablan el idioma del cliente — literal y figuradamente. En Flywire, con vuestra presencia global, podría encajar bien. ¿Hablamos?<button class="pr-pitch-copy" onclick="copyPitch('pt7',this)">Copiar</button></div>
+          </div>
+          <div class="pr-acts">
+            <button class="act-btn" onclick="togglePitch('pw7',this)">✉ Ver pitch</button>
+            <button class="act-btn" onclick="generateVariants('Flywire','pt7','pv7')">↻ Generar variante con IA</button>
+            <div id="pv7" style="width:100%;margin-top:6px;display:none"></div>
+            <button class="pr-view-btn" onclick="openProspectDrawer('Flywire')">📋 Ver perfil completo</button>
+          </div>
+        </div>
+        <div class="score mid"><span class="score-v">70</span><span class="score-u">fit</span></div>
+      </div>
+
+      <div class="pr">
+        <div class="pr-idx">09</div>
+        <div>
+          <div class="pr-name">Cobee</div>
+          <div class="pr-sub">HRtech · Beneficios empresa · 100–200 emp. · España</div>
+          <div class="pr-pills"><span class="pill pill-b">HRtech</span><span class="pill pill-b">B2B SaaS</span><span class="pill pill-n">Serie B</span></div>
+          <div class="pr-match">Match con Netrival — SaaS B2B en crecimiento, equipo técnico que necesita refuerzo, sector de HR donde WAT tiene credibilidad.</div>
+          <div class="pr-pitch-wrap" id="pw8">
+            <div class="pr-pitch" id="pt8">Hola [nombre], trabajamos con HRtech y SaaS B2B que necesitan incorporar perfiles técnicos y de soporte rápidamente. Cobee está en una fase de escala donde tener un partner de confianza para el equipo puede marcar la diferencia. ¿Tiene sentido hablar?<button class="pr-pitch-copy" onclick="copyPitch('pt8',this)">Copiar</button></div>
+          </div>
+          <div class="pr-acts">
+            <button class="act-btn" onclick="togglePitch('pw8',this)">✉ Ver pitch</button>
+            <button class="act-btn" onclick="generateVariants('Cobee','pt8','pv8')">↻ Generar variante con IA</button>
+            <div id="pv8" style="width:100%;margin-top:6px;display:none"></div>
+            <button class="pr-view-btn" onclick="openProspectDrawer('Cobee')">📋 Ver perfil completo</button>
+          </div>
+        </div>
+        <div class="score mid"><span class="score-v">67</span><span class="score-u">fit</span></div>
+      </div>
+
+      <div class="pr">
+        <div class="pr-idx">10</div>
+        <div>
+          <div class="pr-name">Domestika</div>
+          <div class="pr-sub">EdTech · Marketplace creativo · 200–400 emp. · España/LATAM</div>
+          <div class="pr-pills"><span class="pill pill-b">EdTech</span><span class="pill pill-b">Multiidioma</span><span class="pill pill-a">B2C masivo</span></div>
+          <div class="pr-match">Match con Holaluz y TradeInn — B2C digital con base de usuarios internacional, necesidad de perfiles de customer experience y contenido en múltiples idiomas.</div>
+          <div class="pr-pitch-wrap" id="pw9">
+            <div class="pr-pitch" id="pt9">Hola [nombre], en WAT apoyamos a empresas B2C con audiencias internacionales que necesitan equipos de customer experience en múltiples idiomas. Con la escala de Domestika en LATAM y Europa, escalar con perfiles que conecten con la comunidad puede ser clave. ¿Hablamos?<button class="pr-pitch-copy" onclick="copyPitch('pt9',this)">Copiar</button></div>
+          </div>
+          <div class="pr-acts">
+            <button class="act-btn" onclick="togglePitch('pw9',this)">✉ Ver pitch</button>
+            <button class="act-btn" onclick="generateVariants('Domestika','pt9','pv9')">↻ Generar variante con IA</button>
+            <div id="pv9" style="width:100%;margin-top:6px;display:none"></div>
+            <button class="pr-view-btn" onclick="openProspectDrawer('Domestika')">📋 Ver perfil completo</button>
+          </div>
+        </div>
+        <div class="score"><span class="score-v">63</span><span class="score-u">fit</span></div>
+      </div>
+
+      <div class="pr">
+        <div class="pr-idx">11</div>
+        <div>
+          <div class="pr-name">Freshly Cosmetics</div>
+          <div class="pr-sub">E-commerce · Beauty D2C · 100–200 emp. · España</div>
+          <div class="pr-pills"><span class="pill pill-b">D2C</span><span class="pill pill-b">E-commerce</span><span class="pill pill-n">Seasonal peaks</span></div>
+          <div class="pr-match">Match con TradeInn — D2C de alto crecimiento con picos de demanda en temporadas clave y necesidad de soporte al cliente multicanal.</div>
+          <div class="pr-pitch-wrap" id="pw10">
+            <div class="pr-pitch" id="pt10">Hola [nombre], en WAT ayudamos a marcas D2C como TradeInn a gestionar picos de demanda sin quebraderos de cabeza en RRHH. Freshly tiene el perfil perfecto para que nuestro modelo tenga sentido. ¿Te cuento cómo lo hacemos en 15 min?<button class="pr-pitch-copy" onclick="copyPitch('pt10',this)">Copiar</button></div>
+          </div>
+          <div class="pr-acts">
+            <button class="act-btn" onclick="togglePitch('pw10',this)">✉ Ver pitch</button>
+            <button class="act-btn" onclick="generateVariants('Freshly Cosmetics','pt10','pv10')">↻ Generar variante con IA</button>
+            <div id="pv10" style="width:100%;margin-top:6px;display:none"></div>
+            <button class="pr-view-btn" onclick="openProspectDrawer('Freshly Cosmetics')">📋 Ver perfil completo</button>
+          </div>
+        </div>
+        <div class="score"><span class="score-v">61</span><span class="score-u">fit</span></div>
+      </div>
+
+      <div class="pr">
+        <div class="pr-idx">12</div>
+        <div>
+          <div class="pr-name">Voxel Group</div>
+          <div class="pr-sub">SaaS · Hospitality tech · 100–200 emp. · España</div>
+          <div class="pr-pills"><span class="pill pill-b">SaaS B2B</span><span class="pill pill-b">Hospitality</span><span class="pill pill-n">Niche</span></div>
+          <div class="pr-match">Match bajo-medio con Netrival — SaaS de nicho con equipo técnico reducido. Potencial a largo plazo si el cliente crece.</div>
+          <div class="pr-pitch-wrap" id="pw11">
+            <div class="pr-pitch" id="pt11">Hola [nombre], trabajamos con SaaS B2B españoles en fase de consolidación para cubrir posiciones técnicas y de soporte de forma ágil. En Voxel, con el contexto específico del sector hotelero, podemos encontrar perfiles que entiendan el negocio desde el primer día. ¿Hablamos?<button class="pr-pitch-copy" onclick="copyPitch('pt11',this)">Copiar</button></div>
+          </div>
+          <div class="pr-acts">
+            <button class="act-btn" onclick="togglePitch('pw11',this)">✉ Ver pitch</button>
+            <button class="act-btn" onclick="generateVariants('Voxel Group','pt11','pv11')">↻ Generar variante con IA</button>
+            <div id="pv11" style="width:100%;margin-top:6px;display:none"></div>
+            <button class="pr-view-btn" onclick="openProspectDrawer('Voxel Group')">📋 Ver perfil completo</button>
+          </div>
+        </div>
+        <div class="score"><span class="score-v">55</span><span class="score-u">fit</span></div>
+      </div>
+
+    </div><!-- /pr-extra -->
+  </div>
+
+  <div class="more-row" id="moreRow">
+    <button class="btn" onclick="showMore()" id="moreBtn">Ver los 6 prospectos restantes (07–12) →</button>
+  </div>
+</div>
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="sb-l">WAT × AI · Intern B · Misión 3B · Demo v0.1</div>
+  <div class="sb-r">
+    <button class="btn sm" onclick="openModal('modalRoadmap')">¿Qué falta?</button>
+    <button class="btn dark sm" onclick="openModal('modalProd')">Ir a producción →</button>
+  </div>
+</div>
+
+<!-- CLIENT DETAIL DRAWER -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawerOutside(event)">
+  <div class="drawer" id="drawerPanel">
+    <div class="drawer-header">
+      <div>
+        <div class="drawer-name" id="drawerName">Cliente</div>
+        <div class="drawer-sub" id="drawerSub">—</div>
+      </div>
+      <button class="drawer-close" onclick="closeDrawer()">✕</button>
+    </div>
+    <div class="drawer-body">
+      <div class="drawer-section">
+        <div class="drawer-section-title">Datos del cliente</div>
+        <div class="drawer-row"><span class="dk">Sector</span><span class="dv" id="dSector">—</span></div>
+        <div class="drawer-row"><span class="dk">Tamaño</span><span class="dv" id="dSize">—</span></div>
+        <div class="drawer-row"><span class="dk">Fase</span><span class="dv" id="dFase">—</span></div>
+        <div class="drawer-row"><span class="dk">Modelo</span><span class="dv" id="dModel">—</span></div>
+        <div class="drawer-row"><span class="dk">Geografía</span><span class="dv" id="dGeo">—</span></div>
+      </div>
+
+      <div class="drawer-section">
+        <div class="emph-title">¿Qué quieres destacar en la búsqueda?</div>
+        <div class="emph-desc">Activa las características que más te interesan. El ICP les dará más peso y Apollo buscará más empresas con ese perfil.</div>
+        <div class="emph-grid" id="emphGrid"></div>
+      </div>
+
+      <div class="drawer-section" id="drawerNeedsSection">
+        <div class="drawer-section-title">Necesidades de este cliente</div>
+        <div id="drawerNeedsBars"></div>
+      </div>
+    </div>
+    <div class="drawer-footer">
+      <button class="btn dark" style="width:100%" onclick="applyEmphasis()">Aplicar y actualizar ICP →</button>
+      <div class="drawer-footer-note">Los cambios se reflejan en el Paso 2 · Perfil ideal</div>
+    </div>
+  </div>
+</div>
+
+<!-- PROSPECT DETAIL DRAWER -->
+<div class="drawer-overlay" id="prospectDrawerOverlay" onclick="closeProspectDrawerOutside(event)">
+  <div class="drawer" id="prospectDrawerPanel">
+    <div class="drawer-header">
+      <div>
+        <div class="drawer-name" id="pdName">Empresa</div>
+        <div class="drawer-sub" id="pdSub">—</div>
+      </div>
+      <button class="drawer-close" onclick="closeProspectDrawer()">✕</button>
+    </div>
+    <div class="drawer-body">
+      <div class="pd-section">
+        <div class="pd-section-title">Datos de la empresa</div>
+        <div class="pd-row"><span class="pd-k">Sector</span><span class="pd-v" id="pdSector">—</span></div>
+        <div class="pd-row"><span class="pd-k">Empleados</span><span class="pd-v" id="pdSize">—</span></div>
+        <div class="pd-row"><span class="pd-k">País / HQ</span><span class="pd-v" id="pdGeo">—</span></div>
+        <div class="pd-row"><span class="pd-k">Revenue est.</span><span class="pd-v" id="pdRevenue">—</span></div>
+        <div class="pd-row"><span class="pd-k">Fase</span><span class="pd-v" id="pdFase">—</span></div>
+        <div class="pd-row"><span class="pd-k">Modelo</span><span class="pd-v" id="pdModel">—</span></div>
+        <div class="pd-row"><span class="pd-k">Fundación</span><span class="pd-v" id="pdFounded">—</span></div>
+        <div class="pd-row"><span class="pd-k">Web</span><span class="pd-v" id="pdWeb">—</span></div>
+      </div>
+      <div class="pd-section">
+        <div class="pd-section-title">Score de fit con WAT</div>
+        <div id="pdScoreBars"></div>
+      </div>
+      <div class="pd-section">
+        <div class="pd-section-title">Señales detectadas</div>
+        <div id="pdSignals"></div>
+      </div>
+      <div class="pd-section">
+        <div class="pd-section-title">Por qué encaja con WAT</div>
+        <div id="pdMatchText" style="font-size:13px;color:#444;line-height:1.65;padding:10px 12px;background:#f8f8f6;border-radius:8px;border-left:3px solid #e0e0e0"></div>
+      </div>
+      <div class="pd-section">
+        <div class="pd-section-title">Cliente de referencia</div>
+        <div id="pdRefClient" style="font-size:13px;color:#111;padding:10px 12px;background:#f8f8f6;border-radius:8px;display:flex;align-items:center;gap:8px"></div>
+      </div>
+      <div class="pd-section">
+        <div class="pd-section-title">Tecnología y stack</div>
+        <div id="pdTech" style="display:flex;flex-wrap:wrap;gap:5px"></div>
+      </div>
+      <div class="pd-section">
+        <div class="pd-section-title">Pitch actual</div>
+        <div id="pdPitch" style="font-size:12px;color:#444;line-height:1.7;padding:12px 14px;background:#fffef8;border:1px solid #e8e8e8;border-radius:8px;position:relative"></div>
+      </div>
+    </div>
+    <div class="drawer-footer">
+      <button class="btn dark" style="width:100%" id="pdGenBtn" onclick="generateProspectVariant()">↻ Generar variante de pitch con IA</button>
+      <div id="pdVariantResult" style="margin-top:8px;display:none"></div>
+      <div class="drawer-footer-note">Datos de demo · Se actualizarán con Apollo</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<!-- MODAL: ¿QUÉ FALTA? -->
+<div class="modal-overlay" id="modalRoadmap" onclick="closeModalOutside(event,'modalRoadmap')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modalRoadmap')">✕</button>
+    <div class="modal-title">¿Qué falta para la versión real?</div>
+    <div class="modal-sub">Este es el roadmap para pasar de demo a producción con datos reales de Apollo.</div>
+    <div class="modal-item">
+      <div class="modal-icon">✅</div>
+      <div>
+        <div class="modal-item-title">Interfaz y flujo completo</div>
+        <div class="modal-item-desc">Los 3 pasos, el formulario de intake, el ICP y los 12 prospectos con pitch funcionan.</div>
+        <span class="modal-item-badge badge-done">Hecho — Semana 1</span>
+      </div>
+    </div>
+    <div class="modal-item">
+      <div class="modal-icon">⚡</div>
+      <div>
+        <div class="modal-item-title">Apollo Professional (~49€/mes)</div>
+        <div class="modal-item-desc">El plan gratuito no tiene API. Necesitamos el plan Professional para acceder a los endpoints de búsqueda de empresas y personas.</div>
+        <span class="modal-item-badge badge-pending">Pendiente — Confirmar con Pau</span>
+      </div>
+    </div>
+    <div class="modal-item">
+      <div class="modal-icon">🔑</div>
+      <div>
+        <div class="modal-item-title">Claude API key</div>
+        <div class="modal-item-desc">Para que el botón "Generar variante con IA" funcione en producción necesitamos una API key de Anthropic.</div>
+        <span class="modal-item-badge badge-pending">Pendiente — Semana 3-4</span>
+      </div>
+    </div>
+    <div class="modal-item">
+      <div class="modal-icon">📋</div>
+      <div>
+        <div class="modal-item-title">Datos reales de clientes WAT</div>
+        <div class="modal-item-desc">Reemplazar los datos de demo (TradeInn, Netrival, Holaluz) por los datos reales de Pau sobre los mejores clientes.</div>
+        <span class="modal-item-badge badge-pending">Pendiente — Sesión con Pau</span>
+      </div>
+    </div>
+    <div class="modal-item">
+      <div class="modal-icon">🚀</div>
+      <div>
+        <div class="modal-item-title">Despliegue en wearetims.ai</div>
+        <div class="modal-item-desc">Subir el código a Vercel o Lovable con dominio propio. 1 hora de trabajo una vez lo anterior esté listo.</div>
+        <span class="modal-item-badge badge-future">Semana 4-5</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: IR A PRODUCCIÓN -->
+<div class="modal-overlay" id="modalProd" onclick="closeModalOutside(event,'modalProd')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modalProd')">✕</button>
+    <div class="modal-title">Roadmap a producción</div>
+    <div class="modal-sub">El plan para tener esto funcionando con datos reales antes del Demo Day.</div>
+    <div class="modal-item">
+      <div class="modal-icon">1️⃣</div>
+      <div>
+        <div class="modal-item-title">Semana 1–2 (ahora)</div>
+        <div class="modal-item-desc">Demo funcional lista. Enseñar a Pau y Aleix. Recoger feedback y validar el flujo.</div>
+        <span class="modal-item-badge badge-done">En curso</span>
+      </div>
+    </div>
+    <div class="modal-item">
+      <div class="modal-icon">2️⃣</div>
+      <div>
+        <div class="modal-item-title">Semana 3–4</div>
+        <div class="modal-item-desc">Conectar Apollo API + Claude API. Reemplazar datos de demo por búsqueda real. Claude Code + backend mínimo.</div>
+        <span class="modal-item-badge badge-pending">Próximo</span>
+      </div>
+    </div>
+    <div class="modal-item">
+      <div class="modal-icon">3️⃣</div>
+      <div>
+        <div class="modal-item-title">Semana 5–6</div>
+        <div class="modal-item-desc">Aleix empieza a usar la lista real. Iterar sobre el scoring y los pitches basándose en feedback de conversiones.</div>
+        <span class="modal-item-badge badge-future">Siguiente</span>
+      </div>
+    </div>
+    <div class="modal-item">
+      <div class="modal-icon">4️⃣</div>
+      <div>
+        <div class="modal-item-title">Semana 7–8</div>
+        <div class="modal-item-desc">Despliegue en wearetims.ai · Demo Day · Handoff a Aleix y Pau como dueños del sistema.</div>
+        <span class="modal-item-badge badge-future">Demo Day</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── EMPHASIS SYSTEM ───────────────────────────────────────────────────────
+const CLIENT_EMPHASIS = {};
+
+function getClientChars(clientName) {
+  const p = CLIENT_PROFILES[clientName];
+  if (!p) return [];
+  const chars = [];
+  if (p.sector) chars.push({ key:'sector', icon:sectorIcon(p.sector), label:p.sector, sub:'Buscar más empresas de este sector', apolloTag:'Industry: '+p.sector, needKey:null, boost:20 });
+  if (p.size) chars.push({ key:'size', icon:'🏢', label:p.size+' empleados', sub:'Priorizar empresas de este tamaño', apolloTag:'Employees: '+p.size, needKey:null, boost:0 });
+  if (p.model) chars.push({ key:'model', icon:p.model.includes('B2C')?'👥':'🤝', label:'Modelo '+p.model, sub:'Buscar empresas con el mismo modelo', apolloTag:'Model: '+p.model, needKey:p.model.includes('B2C')?'Customer service / ops':'Soporte técnico / data', boost:15 });
+  if (p.geo) chars.push({ key:'geo', icon:'📍', label:p.geo, sub:'Foco en esta geografía', apolloTag:'HQ: '+p.geo, needKey:null, boost:0 });
+  if (p.fase) chars.push({ key:'fase', icon:phaseIcon(p.fase), label:p.fase, sub:'Empresas en la misma fase', apolloTag:phaseApollo(p.fase), needKey:'Escalabilidad rápida', boost:p.fase==='Scale-up'?20:10 });
+  const topNeeds = Object.entries(p.needs||{}).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  topNeeds.forEach(([needLabel,val]) => {
+    if (val >= 60) chars.push({ key:'need_'+needLabel.replace(/\s/g,'_'), icon:needIcon(needLabel), label:needLabel, sub:'Nivel actual: '+val+'% · destacar este perfil', apolloTag:'Keywords: "'+needLabel.toLowerCase()+'"', needKey:needLabel, boost:20 });
+  });
+  (p.apollo||[]).forEach((tag,i) => {
+    if (!chars.some(c=>c.apolloTag===tag)) chars.push({ key:'apollo_'+i, icon:'🔍', label:tag, sub:'Ampliar este filtro de Apollo', apolloTag:tag, needKey:null, boost:0 });
+  });
+  return chars;
+}
+
+function sectorIcon(s) {
+  if (!s) return '🏭';
+  if (s.includes('E-commerce')||s.includes('Retail')) return '🛒';
+  if (s.includes('SaaS')||s.includes('Software')) return '💻';
+  if (s.includes('Energía')||s.includes('Util')) return '⚡';
+  if (s.includes('Fintech')||s.includes('Finance')) return '💳';
+  if (s.includes('Logística')) return '🚚';
+  if (s.includes('Salud')) return '🏥';
+  return '🏭';
+}
+function phaseIcon(f) {
+  if (!f) return '📈';
+  if (f.includes('Startup')||f.includes('Seed')) return '🌱';
+  if (f.includes('Scale')) return '🚀';
+  if (f.includes('Enterprise')) return '🏛️';
+  return '📈';
+}
+function phaseApollo(f) {
+  if (!f) return 'Stage: Growth';
+  if (f.includes('Startup')||f.includes('Seed')) return 'Funding: Seed → Series A';
+  if (f.includes('Scale')) return 'Funding: Series A → Series C';
+  if (f.includes('Enterprise')) return 'Stage: Enterprise';
+  return 'Stage: Growth';
+}
+function needIcon(n) {
+  if (n.includes('Customer')) return '🎧';
+  if (n.includes('multiidioma')) return '🌍';
+  if (n.includes('Escal')) return '📈';
+  if (n.includes('estacion')) return '📆';
+  if (n.includes('técnico')||n.includes('data')) return '🔧';
+  return '⭐';
+}
+
+let currentDrawerClient = null;
+let currentDrawerChars = [];
+
+function openDrawer(e, clientName) {
+  e.stopPropagation();
+  currentDrawerClient = clientName;
+  const p = CLIENT_PROFILES[clientName] || {};
+  currentDrawerChars = getClientChars(clientName);
+  document.getElementById('drawerName').textContent = clientName;
+  document.getElementById('drawerSub').textContent = (p.sector||'—')+' · '+(p.geo||'—');
+  document.getElementById('dSector').textContent = p.sector||'—';
+  document.getElementById('dSize').textContent = p.size||'—';
+  document.getElementById('dFase').textContent = p.fase||'—';
+  document.getElementById('dModel').textContent = p.model||'—';
+  document.getElementById('dGeo').textContent = p.geo||'—';
+  const active = CLIENT_EMPHASIS[clientName] || new Set();
+  const grid = document.getElementById('emphGrid');
+  if (currentDrawerChars.length === 0) {
+    grid.innerHTML = '<div style="font-size:12px;color:#bbb;grid-column:span 2;padding:12px 0">Sin características configuradas.</div>';
+  } else {
+    grid.innerHTML = currentDrawerChars.map(ch => {
+      const isOn = active.has(ch.key);
+      return '<button class="emph-btn'+(isOn?' on':'')+'" data-key="'+ch.key+'" onclick="toggleEmphBtn(this)"><span class="emph-icon">'+ch.icon+'</span><span class="emph-label">'+ch.label+'</span><span class="emph-sublabel">'+ch.sub+'</span>'+(isOn?'<span class="emph-boost">↑ activo</span>':'')+'</button>';
+    }).join('');
+  }
+  const needs = p.needs || {};
+  const activeEmph = CLIENT_EMPHASIS[clientName] || new Set();
+  const barsHtml = Object.entries(needs).length > 0
+    ? Object.entries(needs).map(([k,v]) => {
+        const boosted = currentDrawerChars.some(ch => activeEmph.has(ch.key) && ch.needKey===k);
+        return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f5f5f5"><span style="font-size:12px;color:#777;min-width:148px;flex-shrink:0">'+k+'</span><div style="flex:1;height:5px;background:#f0f0f0;border-radius:3px;overflow:hidden"><div style="height:100%;background:'+(boosted?'#16a34a':'#111')+';width:'+v+'%;border-radius:3px"></div></div><span style="font-size:11px;font-family:monospace;color:'+(boosted?'#16a34a':'#bbb')+';min-width:30px;text-align:right">'+v+'%</span></div>';
+      }).join('')
+    : '<div style="font-size:12px;color:#bbb;padding:8px 0">Sin datos de necesidades</div>';
+  document.getElementById('drawerNeedsBars').innerHTML = barsHtml;
+  document.getElementById('drawerOverlay').classList.add('on');
+}
+
+function toggleEmphBtn(btn) {
+  btn.classList.toggle('on');
+  const isOn = btn.classList.contains('on');
+  const existing = btn.querySelector('.emph-boost');
+  if (isOn && !existing) { const b=document.createElement('span'); b.className='emph-boost'; b.textContent='↑ activo'; btn.appendChild(b); }
+  else if (!isOn && existing) existing.remove();
+}
+
+function applyEmphasis() {
+  if (!currentDrawerClient) return;
+  const active = new Set();
+  document.querySelectorAll('#emphGrid .emph-btn.on').forEach(btn => active.add(btn.dataset.key));
+  CLIENT_EMPHASIS[currentDrawerClient] = active;
+  updateEmphIndicator(currentDrawerClient, active);
+  closeDrawer();
+  if (document.getElementById('p1').classList.contains('on')) computeICP();
+  showToast('✓ Énfasis aplicado a '+currentDrawerClient);
+}
+
+function updateEmphIndicator(clientName, active) {
+  const ind = document.getElementById('emph-ind-'+clientName);
+  if (!ind) return;
+  if (active.size === 0) { ind.innerHTML=''; return; }
+  const chars = getClientChars(clientName);
+  ind.innerHTML = [...active].map(key => {
+    const ch = chars.find(c=>c.key===key);
+    return ch ? '<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:#111;color:#fff;font-family:monospace;white-space:nowrap">'+ch.icon+' '+ch.label+'</span>' : '';
+  }).filter(Boolean).join('');
+}
+
+function closeDrawer() { document.getElementById('drawerOverlay').classList.remove('on'); currentDrawerClient=null; currentDrawerChars=[]; }
+function closeDrawerOutside(e) { if (e.target===document.getElementById('drawerOverlay')) closeDrawer(); }
+function handleCCClick(e,el) { if (e.target.classList.contains('cc-edit')||e.target.closest('.cc-edit')) return; toggleCC(el); }
+
+// ── NAVIGATION ────────────────────────────────────────────────────────────
+const panels=['p0','p1','p2'];
+const steps=document.querySelectorAll('.stp');
+
+function go(n){
+  panels.forEach((id,i)=>document.getElementById(id).classList.toggle('on',i===n));
+  steps.forEach((s,i)=>{s.classList.remove('active','done');if(i===n)s.classList.add('active');else if(i<n)s.classList.add('done');});
+  if (n===1) computeICP();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function toggleCC(el){
+  el.classList.toggle('sel');
+  el.querySelector('.cc-chk').textContent=el.classList.contains('sel')?'✓':'';
+  const c=document.querySelectorAll('.cc.sel').length;
+  document.getElementById('selCnt').textContent=c;
+  document.getElementById('selCnt2').textContent=c;
+  if(document.getElementById('p1').classList.contains('on')) computeICP();
+}
+
+function togglePitch(wrapId,btn){
+  const w=document.getElementById(wrapId);
+  w.classList.toggle('on');
+  btn.textContent=w.classList.contains('on')?'✕ Ocultar pitch':'✉ Ver pitch';
+}
+
+function copyPitch(id,btn){
+  const txt=document.getElementById(id).childNodes[0].textContent.trim();
+  navigator.clipboard.writeText(txt).then(()=>{
+    btn.textContent='✓ Copiado'; btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='Copiar';btn.classList.remove('copied');},2000);
+  }).catch(()=>showToast('No se pudo copiar'));
+}
+
+// ── CLIENT DATA PROFILES ──────────────────────────────────────────────────
+const CLIENT_PROFILES = {
+  'TradeInn': {
+    sector:'E-commerce', size:'51–500', revenue:'20M€–100M€', geo:'España', model:'B2C', fase:'Consolidada',
+    needs:{'Customer service / ops':95,'Perfiles multiidioma':90,'Escalabilidad rápida':85,'Alta estacionalidad':90,'Soporte técnico / data':60},
+    triggers:['Crecimiento de headcount','Job posts CS / ops abiertos','Catálogo multi-país','Alta estacionalidad picos','Operaciones 24/7'],
+    apollo:['Industry: E-commerce','Employees: 50–500','Keywords: "customer service", "multilingual"','Tech: Shopify, Zendesk','HQ: Spain']
+  },
+  'Netrival': {
+    sector:'SaaS', size:'11–200', revenue:'5M€–20M€', geo:'España', model:'B2B', fase:'Scale-up',
+    needs:{'Customer service / ops':60,'Perfiles multiidioma':50,'Escalabilidad rápida':80,'Alta estacionalidad':30,'Soporte técnico / data':90},
+    triggers:['Financiación reciente','Crecimiento de headcount','Plataforma digital propia','Job posts técnicos abiertos'],
+    apollo:['Industry: SaaS / Software','Employees: 11–200','Keywords: "pricing", "analytics", "data"','Funding: Seed → Series B','HQ: Spain']
+  },
+  'Holaluz': {
+    sector:'Utilities / Energía', size:'51–500', revenue:'20M€–100M€', geo:'España', model:'B2C', fase:'Consolidada',
+    needs:{'Customer service / ops':95,'Perfiles multiidioma':70,'Escalabilidad rápida':80,'Alta estacionalidad':75,'Soporte técnico / data':55},
+    triggers:['Expansión a nuevo mercado','Crecimiento de headcount','Operaciones 24/7','Plataforma digital propia'],
+    apollo:['Industry: Utilities, Energy','Employees: 50–500','Keywords: "customer service", "operations"','HQ: Spain, Portugal','Model: B2C digital']
+  }
+};
+
+// ── ICP COMPUTATION ───────────────────────────────────────────────────────
+function computeICP() {
+  const selected = [...document.querySelectorAll('.cc.sel')].map(el => el.querySelector('.cc-name').textContent.trim());
+  const n = selected.length;
+  document.getElementById('icpCount').textContent = n;
+  if (n === 0) {
+    document.getElementById('icpEmpty').style.display='block';
+    document.getElementById('icpContent').style.display='none';
+    document.getElementById('icpConfianza').textContent='—';
+    document.getElementById('icpConfianza').style.color='#bbb';
+    return;
+  }
+  document.getElementById('icpEmpty').style.display='none';
+  document.getElementById('icpContent').style.display='block';
+  const conf = n===1?'Baja':n===2?'Media':n<=4?'Alta':'Muy alta';
+  const confColor = n===1?'#d97706':n===2?'#f59e0b':'#16a34a';
+  document.getElementById('icpConfianza').textContent=conf;
+  document.getElementById('icpConfianza').style.color=confColor;
+  const profiles = selected.map(name=>CLIENT_PROFILES[name]||null).filter(Boolean);
+  if (profiles.length===0) { renderGenericICP(selected); return; }
+  const sectors = [...new Set(profiles.map(p=>p.sector))];
+  document.getElementById('icp-sector').textContent = sectors.length===1?sectors[0]:sectors.length<=2?sectors.join(' · '):'Digital-first / tech-enabled';
+  document.getElementById('icp-size').textContent = mergeRanges(profiles.map(p=>p.size));
+  document.getElementById('icp-revenue').textContent = mergeRevenue(profiles.map(p=>p.revenue));
+  document.getElementById('icp-geo').textContent = [...new Set(profiles.map(p=>p.geo))].join(' · ');
+  document.getElementById('icp-model').textContent = [...new Set(profiles.map(p=>p.model))].join(' / ');
+  document.getElementById('icp-fase').textContent = [...new Set(profiles.map(p=>p.fase))].join(' o ');
+  const needKeys = ['Customer service / ops','Escalabilidad rápida','Perfiles multiidioma','Alta estacionalidad','Soporte técnico / data'];
+  const barsHtml = needKeys.map(key => {
+    const vals = profiles.map(p=>p.needs[key]||0);
+    let avg = Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+    let boosted = false;
+    selected.forEach(name => {
+      const emphKeys = CLIENT_EMPHASIS[name]||new Set();
+      const chars = getClientChars(name);
+      emphKeys.forEach(ek => {
+        const ch = chars.find(c=>c.key===ek);
+        if (ch&&ch.needKey===key&&ch.boost>0) { avg=Math.min(99,avg+ch.boost); boosted=true; }
+      });
+    });
+    const pct = Math.min(99,avg);
+    const boostBadge = boosted?'<span style="font-size:9px;background:#16a34a;color:#fff;padding:1px 5px;border-radius:3px;font-family:monospace;margin-left:4px">↑boost</span>':'';
+    return '<div class="cbar-row"><span class="cbar-lbl">'+key+boostBadge+'</span><div class="cbar-track"><div class="cbar-fill" style="width:0%;'+(boosted?'background:#16a34a':'')+'" data-target="'+pct+'%"></div></div><span class="cbar-pct" style="'+(boosted?'color:#16a34a;font-weight:600':'')+'">'+pct+'%</span></div>';
+  }).join('');
+  document.getElementById('icpBars').innerHTML = barsHtml;
+  requestAnimationFrame(()=>{
+    document.querySelectorAll('.cbar-fill[data-target]').forEach(el=>{
+      setTimeout(()=>{ el.style.width=el.dataset.target; },50);
+    });
+  });
+  const triggerSet = new Set(profiles.flatMap(p=>p.triggers));
+  document.getElementById('icpTriggers').innerHTML = [...triggerSet].map(t=>'<span class="ftag">'+t+'</span>').join('');
+  const apolloSet = new Set(profiles.flatMap(p=>p.apollo));
+  const boostedApolloTags = new Set();
+  selected.forEach(name => {
+    const emphKeys = CLIENT_EMPHASIS[name]||new Set();
+    const chars = getClientChars(name);
+    emphKeys.forEach(ek => {
+      const ch = chars.find(c=>c.key===ek);
+      if (ch&&ch.apolloTag) { apolloSet.add(ch.apolloTag); boostedApolloTags.add(ch.apolloTag); }
+    });
+  });
+  document.getElementById('icpApollo').innerHTML = [...apolloSet].map(f => {
+    const isBoost = boostedApolloTags.has(f);
+    return '<span class="ftag-b" style="'+(isBoost?'background:#dcfce7;color:#15803d;border:1.5px solid #86efac;font-weight:600':'')+'">'+f+(isBoost?' ↑':'')+'</span>';
+  }).join('');
+  document.getElementById('icpDesc').textContent = 'Patrones detectados en '+n+' cliente'+(n>1?'s':'')+' seleccionado'+(n>1?'s':'')+'. Confianza '+conf.toLowerCase()+(n<3?' — añade más clientes para mejorar la precisión.':' — perfil sólido para iniciar la búsqueda.');
+}
+
+function renderGenericICP(names) {
+  document.getElementById('icp-sector').textContent='Digital-first';
+  document.getElementById('icp-size').textContent='11–500 empleados';
+  document.getElementById('icp-revenue').textContent='1M€ – 100M€';
+  document.getElementById('icp-geo').textContent='España';
+  document.getElementById('icp-model').textContent='B2B / B2C';
+  document.getElementById('icp-fase').textContent='Scale-up o consolidada';
+  document.getElementById('icpBars').innerHTML='<div class="cbar-row"><span class="cbar-lbl">Customer service / ops</span><div class="cbar-track"><div class="cbar-fill" style="width:0%" data-target="80%"></div></div><span class="cbar-pct">80%</span></div><div class="cbar-row"><span class="cbar-lbl">Escalabilidad rápida</span><div class="cbar-track"><div class="cbar-fill" style="width:0%" data-target="75%"></div></div><span class="cbar-pct">75%</span></div>';
+  requestAnimationFrame(()=>{ document.querySelectorAll('.cbar-fill[data-target]').forEach(el=>{ setTimeout(()=>{el.style.width=el.dataset.target;},50); }); });
+  document.getElementById('icpTriggers').innerHTML='<span class="ftag">Crecimiento de headcount</span><span class="ftag">Job posts abiertos</span>';
+  document.getElementById('icpApollo').innerHTML='<span class="ftag-b">HQ: Spain</span><span class="ftag-b">Employees: 11–500</span>';
+}
+
+function mergeRanges(sizes) {
+  const map={'11–50':1,'51–200':2,'201–500':3,'501–1000':4,'+1000':5,'11–200':2,'51–500':3};
+  const nums=sizes.map(s=>map[s]||2);
+  const mn=Math.min(...nums), mx=Math.max(...nums);
+  const rev={1:'11–50',2:'51–200',3:'201–500',4:'501–1000',5:'+1000'};
+  return mn===mx?rev[mn]:rev[mn].split('–')[0]+'–'+(rev[mx].includes('+')?rev[mx]:rev[mx].split('–')[1])+' empleados';
+}
+function mergeRevenue(revs) {
+  if (revs.some(r=>r.includes('100M'))) return '5M€ – 100M€+';
+  if (revs.some(r=>r.includes('20M'))) return '5M€ – 100M€';
+  return '1M€ – 20M€';
+}
+
+// ── CLAUDE API ────────────────────────────────────────────────────────────
+// Pega tu key aquí: console.anthropic.com → API Keys → Create Key
+// ── API KEY — guardada en el navegador, solo se pide una vez ─────────────
+function getStoredKey() { try { return localStorage.getItem('wat_claude_key') || ''; } catch(e) { return ''; } }
+function saveStoredKey(k) { try { localStorage.setItem('wat_claude_key', k.trim()); } catch(e) {} }
+function setupKey() {
+  const existing = getStoredKey();
+  const k = window.prompt(existing ? 'API key actual. Pega una nueva para cambiarla:' : 'Pega tu Anthropic API key (sk-ant-...):');
+  if (k && k.trim().startsWith('sk-')) { saveStoredKey(k); showToast('✓ API key guardada'); location.reload(); }
+}
+const apiKey = getStoredKey();
+
+function noKeyMsg(div) {
+  div.innerHTML = '<div style="font-size:12px;color:#d97706;padding:10px 12px;background:#fef3c7;border-radius:7px;line-height:1.5">⚠️ <strong>API key no configurada.</strong> Abre el archivo en un editor de texto, busca <code>const apiKey = \'\'</code> y pega tu key de Anthropic.</div>';
+}
+
+async function claudeCall(prompt, maxTokens) {
+  if (!apiKey) return null;
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','anthropic-version':'2023-06-01','x-api-key':apiKey},
+    body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:maxTokens||600, messages:[{role:'user',content:prompt}] })
+  });
+  const data = await res.json();
+  return (data.content&&data.content[0]&&data.content[0].text) ? data.content[0].text.trim() : null;
+}
+
+// 1. Pitch variant
+async function generateVariants(company, pitchId, variantDivId) {
+  const varDiv = document.getElementById(variantDivId);
+  const pitchText = document.getElementById(pitchId).childNodes[0].textContent.trim();
+  varDiv.style.display = 'block';
+  varDiv.innerHTML = '<div class="loading"><div class="spinner"></div>Generando variante...</div>';
+  if (!apiKey) { noKeyMsg(varDiv); return; }
+  try {
+    const result = await claudeCall('Eres experto en outreach B2B para WAT, empresa de staffing tech española. Genera UNA variante del siguiente pitch para '+company+'. Mas corta (2-3 frases), mas directa, sin mencionar clientes concretos. Devuelve SOLO el texto del pitch.\n\nPitch original:\n'+pitchText, 300);
+    if (result) {
+      varDiv.innerHTML = '<div class="pr-pitch" style="background:#f0f7ff;border-color:#bfdbfe;position:relative"><span style="font-size:10px;color:#1d4ed8;font-family:monospace;font-weight:600;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">Variante IA</span>'+result+'<button class="pr-pitch-copy" onclick="copyVariant(\''+variantDivId+'\',this)">Copiar</button></div>';
+    } else { noKeyMsg(varDiv); }
+  } catch(e) { noKeyMsg(varDiv); }
+}
+
+// 2. Context filters
+function toggleCtxTag(el) { el.classList.toggle('on'); }
+
+async function runContextFilters() {
+  const btn = document.getElementById('runContextBtn');
+  const resultDiv = document.getElementById('aiFiltersResult');
+  resultDiv.style.display = 'block';
+  if (!apiKey) { noKeyMsg(resultDiv); return; }
+  const activeTags = [...document.querySelectorAll('.ctx-tag.on')].map(t=>t.textContent.trim());
+  const custom = document.getElementById('customContext').value.trim();
+  if (activeTags.length===0&&!custom) { showToast('Selecciona al menos un contexto'); return; }
+  btn.textContent='⏳ Analizando...'; btn.disabled=true;
+  resultDiv.innerHTML='<div class="loading"><div class="spinner"></div>Generando filtros de contexto...</div>';
+  const selected=[...document.querySelectorAll('.cc.sel')].map(el=>el.querySelector('.cc-name').textContent.trim());
+  const icpSummary=selected.map(n=>{ const p=CLIENT_PROFILES[n]||{}; return '- '+n+': '+(p.sector||'')+', '+(p.size||'')+' emp., '+(p.model||'')+', '+(p.fase||''); }).join('\n');
+  const contextList=[...activeTags,...(custom?[custom]:[])].join(', ');
+  try {
+    const result = await claudeCall('Eres experto en prospeccion B2B para WAT, empresa de staffing tech espanola.\n\nClientes TOP de WAT:\n'+icpSummary+'\n\nContexto adicional a priorizar: '+contextList+'\n\nGenera 4-5 filtros cualitativos concretos para la busqueda de look-alikes. Para cada uno: que buscar, por que importa para WAT, como detectarlo. Lista numerada, maximo 2 lineas por filtro.', 500);
+    if (result) {
+      resultDiv.innerHTML='<div class="ctx-filter-result"><div style="font-size:11px;font-family:monospace;font-weight:600;margin-bottom:8px;color:#15803d;text-transform:uppercase;letter-spacing:0.06em">✓ Filtros generados por Claude</div><div style="white-space:pre-line;font-size:12px;line-height:1.7;color:#166534">'+result+'</div></div>';
+    } else { noKeyMsg(resultDiv); }
+  } catch(e) { noKeyMsg(resultDiv); }
+  btn.textContent='Analizar con IA →'; btn.disabled=false;
+}
+
+// 3. Top 5 deep analysis
+const TOP5_DATA = [
+  {name:'Deporvillage',score:92,sector:'E-commerce · Deportes',size:'80–120 emp.',geo:'España',revenue:'~30M€',signals:'3 job posts CS abiertos, expansion activa, catalogo multiidioma',matchClient:'TradeInn'},
+  {name:'Factorial HR',score:87,sector:'SaaS · HR Tech',size:'300–500 emp.',geo:'España',revenue:'~50M€',signals:'Serie C, soporte tecnico escalable, plataforma propia',matchClient:'Netrival'},
+  {name:'Glovo',score:85,sector:'Marketplace · Delivery',size:'2000+ emp.',geo:'España',revenue:'+500M€',signals:'Expansion LATAM, ops 24/7, volumen de CS',matchClient:'TradeInn + Holaluz'},
+  {name:'Wallapop',score:82,sector:'Marketplace · C2C',size:'300–500 emp.',geo:'España',revenue:'~80M€',signals:'Expansion Italia, trust & safety, product ops',matchClient:'TradeInn'},
+  {name:'Paack',score:78,sector:'Logistica · Last-mile',size:'200–400 emp.',geo:'España',revenue:'~40M€',signals:'Serie C, ops de alta intensidad, picos de demanda',matchClient:'TradeInn + Holaluz'}
+];
+
+async function analyzeTop5() {
+  const btn=document.getElementById('analyzeTop5Btn');
+  const box=document.getElementById('top5Analysis');
+  box.style.display='block';
+  if (!apiKey) { noKeyMsg(box); return; }
+  btn.textContent='⏳ Analizando...'; btn.disabled=true;
+  box.innerHTML='<div class="loading"><div class="spinner"></div>Analizando los 5 mejores prospectos...</div>';
+  const activeTags=[...document.querySelectorAll('.ctx-tag.on')].map(t=>t.textContent.trim()).join(', ');
+  const custom=document.getElementById('customContext').value.trim();
+  const fullContext=[activeTags,custom].filter(Boolean).join('. ')||'expansion y crecimiento';
+  const selected=[...document.querySelectorAll('.cc.sel')].map(el=>el.querySelector('.cc-name').textContent.trim());
+  const clientSummary=selected.map(n=>{ const p=CLIENT_PROFILES[n]||{}; return n+' ('+( p.sector||'')+', '+(p.model||'')+', '+(p.fase||'')+')'; }).join(', ');
+  const prospectsText=TOP5_DATA.map((p,i)=>(i+1)+'. '+p.name+' | Score: '+p.score+' | '+p.sector+' | '+p.size+' | '+p.geo+' | Revenue: '+p.revenue+' | Señales: '+p.signals+' | Match: '+p.matchClient).join('\n');
+  try {
+    const result=await claudeCall('Eres experto en ventas B2B para WAT, empresa espanola de staffing tech.\n\nClientes de referencia: '+clientSummary+'\nContexto prioritario: '+fullContext+'\n\nTop 5 prospectos:\n'+prospectsText+'\n\nPara CADA uno escribe un analisis breve (3-4 lineas): por que es oportunidad real para WAT ahora, que dolor resuelve WAT, hook de entrada ideal para Aleix. Especifico y comercialmente util. Numerados, separados por linea en blanco.', 900);
+    if (result) {
+      const blocks=result.split('\n\n').filter(b=>b.trim());
+      box.innerHTML='<div style="background:#fffef0;border:1px solid #fde68a;border-radius:12px;padding:16px 18px"><div style="font-size:11px;font-family:monospace;font-weight:600;color:#92400e;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:14px">✨ Analisis profundo top 5 — Claude</div>'+blocks.map((block,i)=>{
+        const co=TOP5_DATA[i]||{};
+        return '<div class="ai-insight"><div class="ai-insight-name">'+(co.name||'')+'<span class="ai-insight-score">Score '+(co.score||'')+'</span></div><div class="ai-insight-body">'+block.replace(/^\d+\.\s*/,'').replace(/\n/g,'<br>')+'</div></div>';
+      }).join('')+'</div>';
+    } else { noKeyMsg(box); }
+  } catch(e) { noKeyMsg(box); }
+  btn.textContent='✨ Analizar top 5 con IA'; btn.disabled=false;
+}
+
+function copyVariant(variantDivId,btn){
+  const el=document.getElementById(variantDivId).querySelector('.pr-pitch');
+  const txt=el.textContent.replace('Variante IA','').replace('Copiar','').trim();
+  navigator.clipboard.writeText(txt).then(()=>{
+    btn.textContent='✓ Copiado'; btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='Copiar';btn.classList.remove('copied');},2000);
+  });
+}
+
+
+// ── PROSPECT DATA ─────────────────────────────────────────────────────────
+const PROSPECT_DATA = {
+  'Deporvillage': {
+    sector:'E-commerce · Deportes outdoor', size:'80–120 empleados', geo:'España (Lleida)', revenue:'~30M€',
+    fase:'Scale-up', model:'B2C D2C', founded:'2007', web:'deporvillage.com',
+    matchClient:'TradeInn', matchScore:92,
+    scores:{'Fit de sector':95,'Fit de tamaño':88,'Señales activas':90,'Potencial de volumen':85,'Facilidad de entrada':80},
+    signals:[
+      {icon:'🔥', text:'3 posiciones de Customer Service abiertas en LinkedIn ahora mismo', hot:true},
+      {icon:'📈', text:'Expansión activa a mercados europeos — Francia, Italia, Alemania'},
+      {icon:'🌍', text:'Catálogo en 6 idiomas — necesitan perfiles multiidioma'},
+      {icon:'📦', text:'Logística propia con picos de demanda en Black Friday y rebajas'},
+    ],
+    match:'Match muy alto con TradeInn. Mismo modelo de venta directa de equipamiento deportivo con logística propia. Los picos de demanda en temporadas clave generan exactamente el mismo problema que WAT resuelve para TradeInn: escalar el equipo de CS rápido sin un proceso de selección de 6-8 semanas.',
+    tech:['Shopify','Zendesk','Salesforce','Google Analytics','Meta Ads'],
+    pitchId:'pt0'
+  },
+  'Factorial HR': {
+    sector:'SaaS · HR Tech', size:'300–500 empleados', geo:'España (Barcelona)', revenue:'~50M€',
+    fase:'Serie C / Scale-up', model:'B2B SaaS', founded:'2016', web:'factorialhr.com',
+    matchClient:'Netrival', matchScore:87,
+    scores:{'Fit de sector':90,'Fit de tamaño':82,'Señales activas':85,'Potencial de volumen':88,'Facilidad de entrada':75},
+    signals:[
+      {icon:'🔥', text:'Acaban de cerrar Serie C — fase de aceleración de equipo', hot:true},
+      {icon:'📋', text:'12+ posiciones abiertas en soporte técnico y operaciones'},
+      {icon:'🚀', text:'Expansión internacional a UK, México y Brasil'},
+      {icon:'🔧', text:'Plataforma propia requiere perfiles técnicos especializados'},
+    ],
+    match:'Match con Netrival en el perfil SaaS B2B de alto crecimiento. Factorial necesita escalar equipos técnicos de soporte y customer success rápidamente para sostener la expansión internacional. WAT puede cubrir esas posiciones con mucha más agilidad que un proceso de selección estándar.',
+    tech:['AWS','React','PostgreSQL','Intercom','HubSpot','Stripe'],
+    pitchId:'pt1'
+  },
+  'Glovo': {
+    sector:'Marketplace · Quick Commerce', size:'2.000–5.000 empleados', geo:'España (Barcelona)', revenue:'+500M€',
+    fase:'Consolidada / Pre-IPO', model:'B2C Marketplace', founded:'2015', web:'glovoapp.com',
+    matchClient:'TradeInn + Holaluz', matchScore:85,
+    scores:{'Fit de sector':88,'Fit de tamaño':70,'Señales activas':92,'Potencial de volumen':98,'Facilidad de entrada':65},
+    signals:[
+      {icon:'🔥', text:'Expansión activa en LATAM y Africa — nuevos mercados cada trimestre', hot:true},
+      {icon:'⚙️', text:'Operaciones 24/7 con altísima rotación en perfiles de ops y CS'},
+      {icon:'🌍', text:'Equipos multiidioma en +25 países'},
+      {icon:'📈', text:'Crecimiento de headcount >30% anual en operaciones'},
+    ],
+    match:'Match alto con TradeInn y Holaluz combinados. Glovo tiene exactamente las mismas necesidades pero a mucho mayor escala: operaciones 24/7, picos de demanda, perfiles multiidioma, alta rotación y necesidad de incorporación rápida. El ticket potencial para WAT es muy grande.',
+    tech:['Kotlin','iOS','Python','Kafka','GCP','Looker'],
+    pitchId:'pt2'
+  },
+  'Wallapop': {
+    sector:'Marketplace · C2C', size:'300–500 empleados', geo:'España (Barcelona)', revenue:'~80M€',
+    fase:'Serie D / Consolidada', model:'B2C Marketplace', founded:'2013', web:'wallapop.com',
+    matchClient:'TradeInn', matchScore:82,
+    scores:{'Fit de sector':85,'Fit de tamaño':84,'Señales activas':80,'Potencial de volumen':80,'Facilidad de entrada':78},
+    signals:[
+      {icon:'🔥', text:'Expansión a Italia en marcha — necesitan equipo local', hot:true},
+      {icon:'🛡️', text:'Escalan equipo de Trust & Safety y moderación'},
+      {icon:'📱', text:'Crecimiento de producto requiere perfiles de product ops'},
+      {icon:'💰', text:'Reciente ronda de inversión para expansión europea'},
+    ],
+    match:'Marketplace digital con necesidades similares a TradeInn en cuanto a customer ops y equipos de soporte. La expansión a Italia crea una necesidad inmediata de perfiles con italiano y conocimiento del mercado local — exactamente lo que WAT puede ofrecer.',
+    tech:['React Native','Node.js','Elasticsearch','Braze','Amplitude'],
+    pitchId:'pt3'
+  },
+  'Paack': {
+    sector:'Logística · Last-mile delivery', size:'200–400 empleados', geo:'España (Barcelona)', revenue:'~40M€',
+    fase:'Serie C', model:'B2B Logística', founded:'2017', web:'paack.co',
+    matchClient:'TradeInn + Holaluz', matchScore:78,
+    scores:{'Fit de sector':80,'Fit de tamaño':85,'Señales activas':75,'Potencial de volumen':78,'Facilidad de entrada':72},
+    signals:[
+      {icon:'🔥', text:'Serie C reciente — fase de escala agresiva de equipo', hot:true},
+      {icon:'📦', text:'Operaciones de alta intensidad con picos en temporada'},
+      {icon:'🚚', text:'Expansión a nuevas ciudades y países europeos'},
+      {icon:'⚙️', text:'Necesitan perfiles ops que entiendan logística last-mile'},
+    ],
+    match:'Perfil operativo muy similar a los clientes actuales de WAT. Logística last-mile con picos de demanda, equipos que necesitan escalar rápido y perfiles que mezclan operaciones con customer service. La Serie C reciente indica que están en modo aceleración.',
+    tech:['Python','React','PostgreSQL','AWS','Tableau'],
+    pitchId:'pt4'
+  },
+  'Kantox': {
+    sector:'Fintech · FX Automation', size:'150–300 empleados', geo:'España (Barcelona)', revenue:'~25M€',
+    fase:'Consolidada / Profitability', model:'B2B SaaS', founded:'2011', web:'kantox.com',
+    matchClient:'Netrival', matchScore:75,
+    scores:{'Fit de sector':78,'Fit de tamaño':80,'Señales activas':70,'Potencial de volumen':72,'Facilidad de entrada':68},
+    signals:[
+      {icon:'📋', text:'Posiciones abiertas en customer success y operaciones financieras'},
+      {icon:'🌍', text:'Clientes en 20+ países — necesitan perfiles multiidioma'},
+      {icon:'💼', text:'Producto técnico que requiere perfiles con background financiero'},
+      {icon:'📈', text:'Crecimiento sostenido post-adquisición por BNP Paribas'},
+    ],
+    match:'SaaS B2B de nicho con perfil similar a Netrival. Necesitan perfiles que entiendan tanto el producto técnico como el contexto financiero del cliente. Ciclo de venta más largo por el sector pero ticket potencial alto.',
+    tech:['Python','AWS','Salesforce','Tableau','Bloomberg API'],
+    pitchId:'pt5'
+  },
+  'Ocaso Seguros': {
+    sector:'Seguros · B2C', size:'200–400 empleados', geo:'España (Madrid)', revenue:'N/D',
+    fase:'Consolidada', model:'B2C', founded:'1920', web:'ocaso.es',
+    matchClient:'Holaluz', matchScore:72,
+    scores:{'Fit de sector':72,'Fit de tamaño':78,'Señales activas':65,'Potencial de volumen':75,'Facilidad de entrada':60},
+    signals:[
+      {icon:'📋', text:'Transformación digital en curso — nuevos canales digitales'},
+      {icon:'📞', text:'Alto volumen de atención al cliente telefónica y digital'},
+      {icon:'🔄', text:'Renovación de contratos anuales genera picos de trabajo'},
+    ],
+    match:'Match parcial con Holaluz en modelo B2C de servicios con alto volumen de atención al cliente. El sector asegurador es más conservador en su ciclo de compra pero tiene necesidades reales de escalar equipos de CS y gestión de pólizas.',
+    tech:['Salesforce','Genesys','SAP','Microsoft 365'],
+    pitchId:'pt6'
+  },
+  'Flywire': {
+    sector:'Fintech · Pagos internacionales', size:'500–800 empleados', geo:'España / USA (Boston)', revenue:'~150M€',
+    fase:'Post-IPO (Nasdaq)', model:'B2B Fintech', founded:'2011', web:'flywire.com',
+    matchClient:'Netrival', matchScore:70,
+    scores:{'Fit de sector':72,'Fit de tamaño':75,'Señales activas':68,'Potencial de volumen':78,'Facilidad de entrada':62},
+    signals:[
+      {icon:'🔥', text:'Cotiza en Nasdaq — presión de crecimiento y eficiencia', hot:true},
+      {icon:'🌍', text:'Operaciones en 240+ países — equipos multiidioma críticos'},
+      {icon:'📋', text:'Posiciones abiertas en customer success y operaciones'},
+      {icon:'🎓', text:'Expansión en verticales de educación, salud y viajes'},
+    ],
+    match:'Empresa de pagos internacionales cotizada con necesidades constantes de perfiles multiidioma y de operaciones. Su presencia global y las verticales en las que opera crean oportunidades recurrentes para WAT en distintas geografías.',
+    tech:['Java','AWS','Salesforce','Stripe','Snowflake'],
+    pitchId:'pt7'
+  },
+  'Cobee': {
+    sector:'HRtech · Beneficios para empleados', size:'100–200 empleados', geo:'España (Madrid)', revenue:'~10M€',
+    fase:'Serie B', model:'B2B SaaS', founded:'2019', web:'cobee.io',
+    matchClient:'Netrival', matchScore:67,
+    scores:{'Fit de sector':70,'Fit de tamaño':72,'Señales activas':65,'Potencial de volumen':65,'Facilidad de entrada':70},
+    signals:[
+      {icon:'📈', text:'Serie B reciente — escala de equipo en marcha'},
+      {icon:'🇪🇺', text:'Expansión a Portugal y otros mercados europeos'},
+      {icon:'📋', text:'Contratando en sales, CS y operaciones'},
+    ],
+    match:'HRtech en fase de escala con perfil muy similar a Netrival. Producto SaaS B2B que requiere perfiles técnicos y de customer success que entiendan el ciclo de gestión de RRHH. Buen fit cultural con WAT como partner de crecimiento.',
+    tech:['React','Node.js','AWS','HubSpot','Intercom'],
+    pitchId:'pt8'
+  },
+  'Domestika': {
+    sector:'EdTech · Marketplace creativo', size:'200–400 empleados', geo:'España (Madrid/LATAM)', revenue:'~40M€',
+    fase:'Consolidada / Expansión', model:'B2C Marketplace', founded:'2000', web:'domestika.org',
+    matchClient:'Holaluz + TradeInn', matchScore:63,
+    scores:{'Fit de sector':65,'Fit de tamaño':78,'Señales activas':60,'Potencial de volumen':70,'Facilidad de entrada':65},
+    signals:[
+      {icon:'🌍', text:'Comunidad en 190+ países — soporte multiidioma crítico'},
+      {icon:'📹', text:'Producción de contenido en escala — perfiles creativos y ops'},
+      {icon:'📈', text:'Crecimiento masivo post-pandemia consolidado'},
+    ],
+    match:'Marketplace B2C con audiencia global que necesita equipos de customer experience en múltiples idiomas. La escala de contenido y comunidad crea necesidades recurrentes de perfiles creativos, de moderación y de atención al usuario.',
+    tech:['Ruby on Rails','React','AWS','Zendesk','Amplitude'],
+    pitchId:'pt9'
+  },
+  'Freshly Cosmetics': {
+    sector:'E-commerce · Beauty D2C', size:'100–200 empleados', geo:'España (Zaragoza)', revenue:'~20M€',
+    fase:'Consolidada', model:'B2C D2C', founded:'2016', web:'freshlycosmetics.com',
+    matchClient:'TradeInn', matchScore:61,
+    scores:{'Fit de sector':65,'Fit de tamaño':70,'Señales activas':58,'Potencial de volumen':62,'Facilidad de entrada':72},
+    signals:[
+      {icon:'📦', text:'Picos de demanda altos en Black Friday y Navidad'},
+      {icon:'🌍', text:'Expansión a Francia y Alemania'},
+      {icon:'📋', text:'Equipo de CS creciendo para soportar internacionalización'},
+    ],
+    match:'D2C de cosmética natural con picos de demanda similares a TradeInn. La internacionalización activa crea necesidad de perfiles bilingües en CS y logística. Fit bueno aunque el volumen es menor al de otros prospectos del listado.',
+    tech:['Shopify','Klaviyo','Gorgias','Meta Ads','Google Analytics'],
+    pitchId:'pt10'
+  },
+  'Voxel Group': {
+    sector:'SaaS · Hospitality Tech', size:'100–200 empleados', geo:'España (Barcelona)', revenue:'~15M€',
+    fase:'Consolidada', model:'B2B SaaS', founded:'2001', web:'voxelgroup.net',
+    matchClient:'Netrival', matchScore:55,
+    scores:{'Fit de sector':58,'Fit de tamaño':68,'Señales activas':50,'Potencial de volumen':55,'Facilidad de entrada':65},
+    signals:[
+      {icon:'📋', text:'Posiciones técnicas abiertas en producto y soporte'},
+      {icon:'🏨', text:'Sector hotelero en recuperación — demanda creciente'},
+      {icon:'🔧', text:'Producto técnico B2B que requiere perfiles especializados'},
+    ],
+    match:'SaaS de nicho para el sector hotelero con un perfil similar a Netrival. Necesitan perfiles técnicos de soporte que entiendan el contexto hospitality. El score es más bajo porque el volumen es menor y el nicho es más específico.',
+    tech:['Java','.NET','Oracle','AWS','Salesforce'],
+    pitchId:'pt11'
+  }
+};
+
+let currentProspectName = null;
+
+function openProspectDrawer(name) {
+  const d = PROSPECT_DATA[name];
+  if (!d) { showToast('Datos no disponibles para ' + name); return; }
+  currentProspectName = name;
+
+  document.getElementById('pdName').textContent = name;
+  document.getElementById('pdSub').textContent = d.sector + ' · ' + d.geo;
+  document.getElementById('pdSector').textContent = d.sector;
+  document.getElementById('pdSize').textContent = d.size;
+  document.getElementById('pdGeo').textContent = d.geo;
+  document.getElementById('pdRevenue').textContent = d.revenue;
+  document.getElementById('pdFase').textContent = d.fase;
+  document.getElementById('pdModel').textContent = d.model;
+  document.getElementById('pdFounded').textContent = d.founded;
+  document.getElementById('pdWeb').innerHTML = '<a href="https://'+d.web+'" target="_blank" style="color:#2563eb;text-decoration:none">'+d.web+' ↗</a>';
+
+  // Score bars
+  document.getElementById('pdScoreBars').innerHTML = Object.entries(d.scores).map(([k,v]) =>
+    '<div class="pd-score-bar"><span class="pd-score-lbl">'+k+'</span><div class="pd-score-track"><div class="pd-score-fill" style="width:0%" data-target="'+v+'%"></div></div><span class="pd-score-val">'+v+'%</span></div>'
+  ).join('');
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.pd-score-fill[data-target]').forEach(el => {
+      setTimeout(() => { el.style.width = el.dataset.target; el.style.transition = 'width 0.5s ease'; }, 60);
+    });
+  });
+
+  // Signals
+  document.getElementById('pdSignals').innerHTML = d.signals.map(s =>
+    '<div class="pd-signal'+(s.hot?' hot':'')+'"><span class="pd-signal-icon">'+s.icon+'</span><span>'+s.text+'</span></div>'
+  ).join('');
+
+  document.getElementById('pdMatchText').textContent = d.match;
+
+  document.getElementById('pdRefClient').innerHTML =
+    '<span style="font-size:16px">🏆</span>' +
+    '<div><div style="font-size:12px;color:#888;margin-bottom:2px">Cliente WAT de referencia</div><div style="font-weight:600;color:#111">'+d.matchClient+'</div></div>' +
+    '<div style="margin-left:auto;font-size:22px;font-family:monospace;font-weight:700;color:'+(d.matchScore>=85?'#16a34a':d.matchScore>=70?'#d97706':'#888')+'">'+d.matchScore+'</div>';
+
+  document.getElementById('pdTech').innerHTML = d.tech.map(t =>
+    '<span style="font-size:11px;padding:3px 9px;border-radius:20px;background:#f0f0f0;color:#555;font-family:monospace">'+t+'</span>'
+  ).join('');
+
+  // Pitch
+  const pitchEl = document.getElementById(d.pitchId);
+  const pitchText = pitchEl ? pitchEl.childNodes[0].textContent.trim() : 'Pitch no disponible';
+  document.getElementById('pdPitch').innerHTML = '<span style="font-size:10px;font-family:monospace;color:#bbb;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px">Pitch actual</span>'+pitchText+'<button class="pr-pitch-copy" style="position:absolute;top:8px;right:8px" onclick="copyFromDrawer(this)">Copiar</button>';
+
+  document.getElementById('pdVariantResult').style.display = 'none';
+  document.getElementById('pdVariantResult').innerHTML = '';
+  document.getElementById('prospectDrawerOverlay').classList.add('on');
+}
+
+function copyFromDrawer(btn) {
+  const txt = document.getElementById('pdPitch').childNodes[2] ? document.getElementById('pdPitch').childNodes[2].textContent.trim() : '';
+  const fullTxt = document.getElementById('pdPitch').textContent.replace('Pitch actual','').replace('Copiar','').trim();
+  navigator.clipboard.writeText(fullTxt).then(() => {
+    btn.textContent='✓ Copiado'; btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='Copiar';btn.classList.remove('copied');},2000);
+  });
+}
+
+async function generateProspectVariant() {
+  const btn = document.getElementById('pdGenBtn');
+  const resultDiv = document.getElementById('pdVariantResult');
+  if (!currentProspectName) return;
+  const d = PROSPECT_DATA[currentProspectName];
+  const pitchEl = document.getElementById(d.pitchId);
+  const pitchText = pitchEl ? pitchEl.childNodes[0].textContent.trim() : '';
+  resultDiv.style.display = 'block';
+  if (!apiKey) { noKeyMsg(resultDiv); return; }
+  btn.textContent = '⏳ Generando...'; btn.disabled = true;
+  resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div>Generando variante...</div>';
+  try {
+    const prompt = 'Eres experto en outreach B2B para WAT, empresa de staffing tech espanola. Genera UNA variante del pitch para ' + currentProspectName + '. Mas corta (2-3 frases), mas directa, sin mencionar clientes concretos. Devuelve SOLO el texto. Pitch original: ' + pitchText;
+    const result = await claudeCall(prompt, 300);
+    if (result) {
+      resultDiv.innerHTML = '<div class="pr-pitch" style="background:#f0f7ff;border-color:#bfdbfe;position:relative;margin-top:4px"><span style="font-size:10px;color:#1d4ed8;font-family:monospace;font-weight:600;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em">Variante IA</span>'+result+'<button class="pr-pitch-copy" onclick="copyVariantFromDrawer(this)">Copiar</button></div>';
+    } else { noKeyMsg(resultDiv); }
+  } catch(e) { noKeyMsg(resultDiv); }
+  btn.textContent = '↻ Generar variante de pitch con IA'; btn.disabled = false;
+}
+
+function copyVariantFromDrawer(btn) {
+  const el = btn.parentElement;
+  const txt = el.textContent.replace('Variante IA','').replace('Copiar','').trim();
+  navigator.clipboard.writeText(txt).then(()=>{
+    btn.textContent='✓ Copiado'; btn.classList.add('copied');
+    setTimeout(()=>{btn.textContent='Copiar';btn.classList.remove('copied');},2000);
+  });
+}
+
+function closeProspectDrawer() {
+  document.getElementById('prospectDrawerOverlay').classList.remove('on');
+  currentProspectName = null;
+}
+function closeProspectDrawerOutside(e) {
+  if (e.target === document.getElementById('prospectDrawerOverlay')) closeProspectDrawer();
+}
+
+function showMore(){ document.getElementById('prExtra').classList.add('on'); document.getElementById('moreRow').style.display='none'; }
+function openModal(id){ document.getElementById(id).classList.add('on'); }
+function closeModal(id){ document.getElementById(id).classList.remove('on'); }
+function closeModalOutside(e,id){ if(e.target===document.getElementById(id)) closeModal(id); }
+function showToast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2500); }
+
+const tagStore=[];
+function addItag(e){
+  if(e.key!=='Enter'&&e.key!==',') return;
+  e.preventDefault();
+  const inp=document.getElementById('ti');
+  const v=inp.value.trim().replace(',','');
+  if(!v) return;
+  const t=document.createElement('span');
+  t.className='itag';
+  t.innerHTML=v+'<span class="itag-x" onclick="this.parentElement.remove()">×</span>';
+  document.getElementById('tagBox').insertBefore(t,inp);
+  inp.value='';
+}
+function showIntake(){ document.getElementById('intakeForm').classList.add('on'); document.getElementById('addBtn').style.display='none'; document.getElementById('intakeForm').scrollIntoView({behavior:'smooth',block:'start'}); }
+function hideIntake(){ document.getElementById('intakeForm').classList.remove('on'); document.getElementById('addBtn').style.display=''; }
+function saveClient(){
+  const name=document.getElementById('fn').value.trim();
+  if(!name){ showToast('Escribe el nombre del cliente'); return; }
+  const sector=document.getElementById('fs').value||'Sin sector';
+  const margin=document.getElementById('fm').value;
+  const size=document.getElementById('fz').value;
+  const fase=document.getElementById('ff').value||'Scale-up';
+  const needsGuess={
+    'Customer service / ops':sector.includes('E-commerce')||sector.includes('Retail')||sector.includes('Energía')?90:65,
+    'Escalabilidad rápida':fase==='Scale-up'||fase==='Startup / Seed'?85:70,
+    'Perfiles multiidioma':sector.includes('E-commerce')||sector.includes('Logística')?80:50,
+    'Alta estacionalidad':sector.includes('E-commerce')||sector.includes('Retail')?80:40,
+    'Soporte técnico / data':sector.includes('SaaS')||sector.includes('Fintech')?85:55
+  };
+  const triggersGuess=['Crecimiento de headcount','Job posts abiertos'];
+  if(fase==='Scale-up'||fase==='Startup / Seed') triggersGuess.push('Financiación reciente');
+  if(sector.includes('E-commerce')) triggersGuess.push('Alta estacionalidad picos');
+  CLIENT_PROFILES[name]={ sector, size:size||'11–500', revenue:'1M€–100M€', geo:document.getElementById('fc').value||'España', model:'B2B / B2C', fase, needs:needsGuess, triggers:triggersGuess, apollo:['Industry: '+sector,'Employees: '+(size||'11–500'),'HQ: '+(document.getElementById('fc').value||'Spain')] };
+  const grid=document.getElementById('ccgrid');
+  const addBtn=document.getElementById('addBtn');
+  const div=document.createElement('div');
+  div.className='cc sel'; div.onclick=function(e){handleCCClick(e,this)};
+  div.innerHTML='<div class="cc-chk">✓</div><div class="cc-name">'+name+'</div><div class="cc-sub">'+sector+(size?' · '+size+' emp.':'')+'</div><div class="cc-pills">'+(margin?'<span class="pill pill-g">'+margin+'</span>':'')+'</div><div class="cc-stats"><div><div class="cc-sv">—</div><div class="cc-sl">Profesionales</div></div><div><div class="cc-sv">Nuevo</div><div class="cc-sl">Estado</div></div></div><div class="emph-indicator" id="emph-ind-'+name+'"></div><button class="cc-edit" onclick="openDrawer(event,\''+name+'\')">Destacar →</button>';
+  grid.insertBefore(div,addBtn);
+  const c=document.querySelectorAll('.cc.sel').length;
+  document.getElementById('selCnt').textContent=c;
+  document.getElementById('selCnt2').textContent=c;
+  ['fn','fw','fp'].forEach(id=>document.getElementById(id).value='');
+  ['fs','fz','fm','ff'].forEach(id=>document.getElementById(id).value='');
+  document.querySelectorAll('#tagBox .itag').forEach(t=>t.remove());
+  document.querySelectorAll('#topToggle .tog').forEach(t=>t.classList.remove('on'));
+  hideIntake();
+  showToast('✓ Cliente "'+name+'" añadido');
+}
+</script>
+</body>
+</html>
